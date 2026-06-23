@@ -19,7 +19,7 @@ export function createOpenCodeDriver(): BackendDriver {
     },
 
     buildArgs(input): { command: string; args: string[] } {
-      const args = ['run', '--format', 'json'];
+      const args = input.streamJson !== false ? ['run', '--format', 'json'] : ['run'];
       if (input.model) {
         args.push('--model', input.model);
       }

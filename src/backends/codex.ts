@@ -55,7 +55,10 @@ export function createCodexDriver(): BackendDriver {
     },
 
     buildArgs(input): { command: string; args: string[] } {
-      const args: string[] = input.sessionId ? ['exec', 'resume', '--json'] : ['exec', '--json'];
+      const json = input.streamJson !== false;
+      const args: string[] = input.sessionId
+        ? json ? ['exec', 'resume', '--json'] : ['exec', 'resume']
+        : json ? ['exec', '--json'] : ['exec'];
       if (input.yolo) {
         args.push('--full-auto');
       }

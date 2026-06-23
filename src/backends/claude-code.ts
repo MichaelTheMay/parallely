@@ -32,12 +32,10 @@ export function createClaudeCodeDriver(): BackendDriver {
     },
 
     buildArgs(input): { command: string; args: string[] } {
-      const args = [
-        '--print',
-        '--output-format', 'stream-json',
-        '--max-turns', '200',
-        '--verbose',
-      ];
+      const args = ['--print', '--max-turns', '200'];
+      if (input.streamJson !== false) {
+        args.push('--output-format', 'stream-json', '--verbose');
+      }
       if (input.yolo) {
         args.push('--dangerously-skip-permissions');
       }

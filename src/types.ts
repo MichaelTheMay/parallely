@@ -113,6 +113,8 @@ export interface BackendDriverInput {
   prompt: string;
   cwd: string;
   sessionId?: string;
+  /** Emit machine-readable JSON event stream (default true). Set false for human-readable output when stdout is not parsed. */
+  streamJson?: boolean;
 }
 
 export interface BackendDriverCallbacks {

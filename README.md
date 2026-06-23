@@ -37,7 +37,8 @@ Parallely works with **[Codex](https://github.com/openai/codex)**, **[Claude Cod
 ### Install from source
 
 ```bash
-cd Parallely
+git clone https://github.com/MichaelTheMay/parallely.git
+cd parallely
 npm install --install-strategy=nested
 bun run build
 npm install -g .

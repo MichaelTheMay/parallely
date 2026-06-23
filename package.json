@@ -5,6 +5,14 @@
   "type": "module",
   "license": "MIT",
   "author": "Michael May",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelTheMay/parallely.git"
+  },
+  "homepage": "https://github.com/MichaelTheMay/parallely#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelTheMay/parallely/issues"
+  },
   "keywords": [
     "ai",
     "agent",

@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.aeon/runs/
+.aeon/worktrees/
+*.tgz

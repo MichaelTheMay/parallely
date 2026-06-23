@@ -1,0 +1,42 @@
+{
+  "name": "aeon",
+  "version": "0.1.0",
+  "description": "Parallel agent orchestration CLI — execute plan sections concurrently via AI coding agents",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Open-Document-Alliance/Aeon.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "orchestration",
+    "parallel",
+    "cli",
+    "codex",
+    "claude",
+    "opencode"
+  ],
+  "bin": {
+    "aeon": "bin/aeon.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.tsx --format esm --target esnext --out-dir dist --clean",
+    "dev": "bun run src/index.tsx",
+    "type-check": "bun run tsc --noEmit"
+  },
+  "dependencies": {
+    "@openai/codex-sdk": "^0.115.0",
+    "@opentui/core": "^0.1.61",
+    "@opentui/react": "^0.1.61",
+    "commander": "^12.1.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  }
+}

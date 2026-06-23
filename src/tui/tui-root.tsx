@@ -1,9 +1,9 @@
-/* ── AeonTui: root component for the fullscreen TUI ── */
+/* ── ParallelyTui: root component for the fullscreen TUI ── */
 
 import { useEffect, useReducer, useState } from 'react';
 import { useKeyboard, useRenderer } from '@opentui/react';
 import type { RunSnapshot } from '../types.js';
-import type { AeonOrchestrator } from '../orchestrator.js';
+import type { ParallelyOrchestrator } from '../orchestrator.js';
 import { useTerminalSize } from './hooks.js';
 import { tuiReducer, createInitialState } from './tui-state.js';
 import { OverviewScreen } from './overview.js';
@@ -15,11 +15,11 @@ import { ChatInputBar, INITIAL_CHAT_STATE, openChat, closeChat, chatSending, cha
 import type { ChatInputState } from './chat-input.js';
 import { BG } from './theme.js';
 
-interface AeonTuiProps {
-  orchestrator: AeonOrchestrator;
+interface ParallelyTuiProps {
+  orchestrator: ParallelyOrchestrator;
 }
 
-export function AeonTui({ orchestrator }: AeonTuiProps): JSX.Element {
+export function ParallelyTui({ orchestrator }: ParallelyTuiProps): JSX.Element {
   const [snapshot, setSnapshot] = useState<RunSnapshot>(orchestrator.getSnapshot());
   const [state, dispatch] = useReducer(tuiReducer, undefined, createInitialState);
   const [chat, setChat] = useState<ChatInputState>(INITIAL_CHAT_STATE);

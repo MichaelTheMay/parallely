@@ -1,13 +1,13 @@
-# Aeon Plan Creation Skill
+# Parallely Plan Creation Skill
 
-You are creating an **Aeon execution plan** — a set of markdown files that will each be executed in parallel by an independent AI coding agent in its own git worktree.
+You are creating an **Parallely execution plan** — a set of markdown files that will each be executed in parallel by an independent AI coding agent in its own git worktree.
 
 ## Output format
 
 Create a directory of numbered markdown files. Each file = one agent = one parallel task.
 
 ```
-.aeon/plan/
+.parallely/plan/
 ├── 01-section-name.md
 ├── 02-section-name.md
 ├── 03-section-name.md
@@ -83,25 +83,25 @@ For a task "Build a REST API with auth, endpoints, and tests":
 ## Running the plan
 
 ```bash
-aeon validate          # Check plan for errors
-aeon run               # Execute with Codex (default)
-aeon run -b codex      # Execute with Codex
-aeon run -b opencode   # Execute with OpenCode
+parallely validate          # Check plan for errors
+parallely run               # Execute with Codex (default)
+parallely run -b codex      # Execute with Codex
+parallely run -b opencode   # Execute with OpenCode
 ```
 
 ## After creating the plan
 
-Once all plan files are written to `.aeon/plan/`, output a fenced command block:
+Once all plan files are written to `.parallely/plan/`, output a fenced command block:
 
 ```bash
-cd /absolute/path/to/repo && aeon validate && aeon run
+cd /absolute/path/to/repo && parallely validate && parallely run
 ```
 
 Replace the path with the actual repo root. Tell the user:
 "Open a terminal and run the command above to start parallel execution.
-The Aeon TUI will show real-time progress of all agents."
+The Parallely TUI will show real-time progress of all agents."
 
 If the user specifies a backend preference, include it:
 ```bash
-cd /absolute/path/to/repo && aeon validate && aeon run -b codex
+cd /absolute/path/to/repo && parallely validate && parallely run -b codex
 ```

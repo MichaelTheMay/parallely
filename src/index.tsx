@@ -9,7 +9,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
-import { AeonOrchestrator } from './orchestrator.js';
+import { ParallelyOrchestrator } from './orchestrator.js';
 import { getDriver } from './backends/driver.js';
 import { parsePlanDir } from './plan/parser.js';
 import { validatePlan } from './plan/validator.js';
@@ -53,22 +53,22 @@ function ensureGitRepository(cwd: string): void {
 
   const detail = (result.stderr || result.stdout || '').trim();
   if (detail) {
-    throw new Error(`aeon run requires a git repository (${detail})`);
+    throw new Error(`parallely run requires a git repository (${detail})`);
   }
-  throw new Error('aeon run requires a git repository');
+  throw new Error('parallely run requires a git repository');
 }
 
 function ensureSingleReactRuntime(): void {
   const localRequire = createRequire(import.meta.url);
   const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-  let aeonReactPath: string;
+  let parallelyReactPath: string;
   try {
-    aeonReactPath = localRequire.resolve('react');
+    parallelyReactPath = localRequire.resolve('react');
   } catch {
     throw new Error(
       [
-        'React is missing for aeon.',
+        'React is missing for parallely.',
         `Install dependencies from: ${packageDir}`,
         '  npm install --install-strategy=nested',
         '  bun run build',
@@ -86,12 +86,12 @@ function ensureSingleReactRuntime(): void {
     throw new Error(`Failed to resolve @opentui/react runtime (${detail})`);
   }
 
-  if (aeonReactPath === openTuiReactPath) return;
+  if (parallelyReactPath === openTuiReactPath) return;
 
   throw new Error(
     [
       'Detected multiple React runtimes; OpenTUI cannot render reliably.',
-      `aeon resolves react as: ${aeonReactPath}`,
+      `parallely resolves react as: ${parallelyReactPath}`,
       `@opentui/react resolves react as: ${openTuiReactPath}`,
       `Reinstall dependencies from: ${packageDir}`,
       '  npm install --install-strategy=nested',
@@ -100,22 +100,22 @@ function ensureSingleReactRuntime(): void {
   );
 }
 
-interface AeonConfig {
+interface ParallelyConfig {
   backend?: string;
 }
 
-function aeonConfigPath(cwd: string): string {
-  return path.join(cwd, '.aeon', 'config.json');
+function parallelyConfigPath(cwd: string): string {
+  return path.join(cwd, '.parallely', 'config.json');
 }
 
-function readAeonConfig(cwd: string): AeonConfig {
-  const configPath = aeonConfigPath(cwd);
+function readParallelyConfig(cwd: string): ParallelyConfig {
+  const configPath = parallelyConfigPath(cwd);
   if (!fs.existsSync(configPath)) return {};
 
   try {
     const parsed = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as unknown;
     if (typeof parsed === 'object' && parsed !== null) {
-      return parsed as AeonConfig;
+      return parsed as ParallelyConfig;
     }
   } catch {
     // Ignore invalid config and fall back.
@@ -123,15 +123,15 @@ function readAeonConfig(cwd: string): AeonConfig {
   return {};
 }
 
-function writeAeonConfig(cwd: string, patch: Partial<AeonConfig>): void {
-  const next = { ...readAeonConfig(cwd), ...patch };
-  const configPath = aeonConfigPath(cwd);
+function writeParallelyConfig(cwd: string, patch: Partial<ParallelyConfig>): void {
+  const next = { ...readParallelyConfig(cwd), ...patch };
+  const configPath = parallelyConfigPath(cwd);
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.writeFileSync(configPath, `${JSON.stringify(next, null, 2)}\n`);
 }
 
 function latestRunBackend(cwd: string): Backend | undefined {
-  const runsDir = path.join(cwd, '.aeon', 'runs');
+  const runsDir = path.join(cwd, '.parallely', 'runs');
   if (!fs.existsSync(runsDir)) return undefined;
 
   const runs = fs.readdirSync(runsDir).sort().reverse();
@@ -154,11 +154,11 @@ function latestRunBackend(cwd: string): Backend | undefined {
 function resolveBackend(cwd: string, requestedBackend?: string): Backend {
   if (requestedBackend) {
     const parsed = parseBackend(requestedBackend);
-    writeAeonConfig(cwd, { backend: parsed });
+    writeParallelyConfig(cwd, { backend: parsed });
     return parsed;
   }
 
-  const cfg = readAeonConfig(cwd);
+  const cfg = readParallelyConfig(cwd);
   if (typeof cfg.backend === 'string') {
     try {
       return parseBackend(cfg.backend);
@@ -177,7 +177,7 @@ type Harness = 'claude-code' | 'cursor' | 'codex' | 'opencode';
 const ALL_HARNESSES: Harness[] = ['claude-code', 'cursor', 'codex', 'opencode'];
 
 function resolveSkillFile(filename: string): string {
-  // Resolve relative to the package directory (bin/aeon.js → ../)
+  // Resolve relative to the package directory (bin/parallely.js → ../)
   const packageDir = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     '..',
@@ -185,7 +185,7 @@ function resolveSkillFile(filename: string): string {
   const skillPath = path.join(packageDir, 'skill', filename);
   if (!fs.existsSync(skillPath)) {
     // Fallback: resolve from cwd (dev mode)
-    const cwdSkillPath = path.join(process.cwd(), 'aeon', 'skill', filename);
+    const cwdSkillPath = path.join(process.cwd(), 'parallely', 'skill', filename);
     if (fs.existsSync(cwdSkillPath)) return cwdSkillPath;
     throw new Error(
       `Cannot find ${filename} at ${skillPath} or ${cwdSkillPath}`,
@@ -202,7 +202,7 @@ function readImplementSkillContent(): string {
   return fs.readFileSync(resolveSkillFile('IMPLEMENT.md'), 'utf-8');
 }
 
-const AEON_SECTION_MARKER = '## Aeon';
+const PARALLELY_SECTION_MARKER = '## Parallely';
 
 function appendSectionToFile(
   filePath: string,
@@ -210,10 +210,10 @@ function appendSectionToFile(
 ): { action: 'created' | 'updated' | 'skipped' } {
   if (fs.existsSync(filePath)) {
     const existing = fs.readFileSync(filePath, 'utf-8');
-    if (existing.includes(AEON_SECTION_MARKER)) {
-      // Replace the existing Aeon section (marker to next same-level heading or EOF)
-      const markerIdx = existing.indexOf(AEON_SECTION_MARKER);
-      const afterMarker = existing.indexOf('\n## ', markerIdx + AEON_SECTION_MARKER.length);
+    if (existing.includes(PARALLELY_SECTION_MARKER)) {
+      // Replace the existing Parallely section (marker to next same-level heading or EOF)
+      const markerIdx = existing.indexOf(PARALLELY_SECTION_MARKER);
+      const afterMarker = existing.indexOf('\n## ', markerIdx + PARALLELY_SECTION_MARKER.length);
       const before = existing.slice(0, markerIdx).trimEnd();
       const after = afterMarker !== -1 ? existing.slice(afterMarker) : '';
       const updated = (before ? before + '\n\n' : '') + sectionContent + after;
@@ -259,24 +259,24 @@ function setupClaudeCode(cwd: string, skillBody: string, implementBody: string):
   const results: SetupResult[] = [];
 
   // Install planning skill
-  const planSkill = `---\nname: aeon-plan\ndescription: Create an Aeon parallel execution plan that splits work across multiple AI agents running concurrently in separate worktrees.\n---\n\n${skillBody}`;
+  const planSkill = `---\nname: parallely-plan\ndescription: Create an Parallely parallel execution plan that splits work across multiple AI agents running concurrently in separate worktrees.\n---\n\n${skillBody}`;
   results.push(installSkillFile(
-    path.join(cwd, '.claude', 'skills', 'aeon-plan', 'SKILL.md'),
+    path.join(cwd, '.claude', 'skills', 'parallely-plan', 'SKILL.md'),
     planSkill,
     'Claude Code',
   ));
 
   // Install implementation skill
-  const implSkill = `---\nname: aeon-implement\ndescription: Execute a single Aeon plan section in an isolated worktree — stay in scope, follow acceptance criteria, commit when done.\n---\n\n${implementBody}`;
+  const implSkill = `---\nname: parallely-implement\ndescription: Execute a single Parallely plan section in an isolated worktree — stay in scope, follow acceptance criteria, commit when done.\n---\n\n${implementBody}`;
   results.push(installSkillFile(
-    path.join(cwd, '.claude', 'skills', 'aeon-implement', 'SKILL.md'),
+    path.join(cwd, '.claude', 'skills', 'parallely-implement', 'SKILL.md'),
     implSkill,
     'Claude Code',
   ));
 
   // Also keep CLAUDE.md reference for context
   const claudeMdPath = path.join(cwd, 'CLAUDE.md');
-  const section = `${AEON_SECTION_MARKER}\n\nThis repo uses [Aeon](aeon/) for parallel agent orchestration.\n- **Planning:** \`/aeon-plan\` — create an execution plan for parallel work\n- **Implementation:** \`/aeon-implement\` — execute a single plan section\n`;
+  const section = `${PARALLELY_SECTION_MARKER}\n\nThis repo uses [Parallely](parallely/) for parallel agent orchestration.\n- **Planning:** \`/parallely-plan\` — create an execution plan for parallel work\n- **Implementation:** \`/parallely-implement\` — execute a single plan section\n`;
   const { action } = appendSectionToFile(claudeMdPath, section);
   results.push({ harness: 'Claude Code', target: 'CLAUDE.md', action });
 
@@ -287,17 +287,17 @@ function setupCursorSkill(cwd: string, skillBody: string, implementBody: string)
   const results: SetupResult[] = [];
 
   // Planning skill
-  const planSkill = `---\nname: aeon\ndescription: Parallel agent orchestration — create Aeon execution plans that split work across multiple AI agents running concurrently.\n---\n\n${skillBody}`;
+  const planSkill = `---\nname: parallely\ndescription: Parallel agent orchestration — create Parallely execution plans that split work across multiple AI agents running concurrently.\n---\n\n${skillBody}`;
   results.push(installSkillFile(
-    path.join(cwd, '.cursor', 'skills', 'aeon', 'SKILL.md'),
+    path.join(cwd, '.cursor', 'skills', 'parallely', 'SKILL.md'),
     planSkill,
     'Cursor',
   ));
 
   // Implementation skill
-  const implSkill = `---\nname: aeon-implement\ndescription: Implementation skill for executing a single Aeon plan section in an isolated worktree.\n---\n\n${implementBody}`;
+  const implSkill = `---\nname: parallely-implement\ndescription: Implementation skill for executing a single Parallely plan section in an isolated worktree.\n---\n\n${implementBody}`;
   results.push(installSkillFile(
-    path.join(cwd, '.cursor', 'skills', 'aeon', 'IMPLEMENT.md'),
+    path.join(cwd, '.cursor', 'skills', 'parallely', 'IMPLEMENT.md'),
     implSkill,
     'Cursor',
   ));
@@ -307,50 +307,50 @@ function setupCursorSkill(cwd: string, skillBody: string, implementBody: string)
 
 function setupCursorRule(cwd: string): SetupResult {
   const rulesDir = path.join(cwd, '.cursor', 'rules');
-  const ruleFile = path.join(rulesDir, 'aeon-parallel-plans.mdc');
+  const ruleFile = path.join(rulesDir, 'parallely-parallel-plans.mdc');
 
   if (fs.existsSync(ruleFile)) {
-    return { harness: 'Cursor', target: '.cursor/rules/aeon-parallel-plans.mdc', action: 'skipped' };
+    return { harness: 'Cursor', target: '.cursor/rules/parallely-parallel-plans.mdc', action: 'skipped' };
   }
 
   fs.mkdirSync(rulesDir, { recursive: true });
 
   const content = `---
-description: When asked to create a parallel execution plan or split work across agents, follow the Aeon skill
+description: When asked to create a parallel execution plan or split work across agents, follow the Parallely skill
 alwaysApply: false
-globs: .aeon/plan/**
+globs: .parallely/plan/**
 ---
 
-# Aeon Parallel Plans
+# Parallely Parallel Plans
 
-When creating or editing Aeon execution plans, follow the full skill at \`.cursor/skills/aeon/SKILL.md\`.
+When creating or editing Parallely execution plans, follow the full skill at \`.cursor/skills/parallely/SKILL.md\`.
 `;
   fs.writeFileSync(ruleFile, content);
-  return { harness: 'Cursor', target: '.cursor/rules/aeon-parallel-plans.mdc', action: 'created' };
+  return { harness: 'Cursor', target: '.cursor/rules/parallely-parallel-plans.mdc', action: 'created' };
 }
 
 function setupCodexOpenCode(cwd: string, skillBody: string, implementBody: string): SetupResult[] {
   const results: SetupResult[] = [];
 
   // Install planning skill to .codex/skills/ (Codex discovers these)
-  const planSkill = `---\nname: aeon-plan\ndescription: Create an Aeon parallel execution plan that splits work across multiple AI agents running concurrently in separate worktrees.\n---\n\n${skillBody}`;
+  const planSkill = `---\nname: parallely-plan\ndescription: Create an Parallely parallel execution plan that splits work across multiple AI agents running concurrently in separate worktrees.\n---\n\n${skillBody}`;
   results.push(installSkillFile(
-    path.join(cwd, '.codex', 'skills', 'aeon-plan', 'SKILL.md'),
+    path.join(cwd, '.codex', 'skills', 'parallely-plan', 'SKILL.md'),
     planSkill,
     'Codex',
   ));
 
   // Install implementation skill
-  const implSkill = `---\nname: aeon-implement\ndescription: Execute a single Aeon plan section in an isolated worktree — stay in scope, follow acceptance criteria, commit when done.\n---\n\n${implementBody}`;
+  const implSkill = `---\nname: parallely-implement\ndescription: Execute a single Parallely plan section in an isolated worktree — stay in scope, follow acceptance criteria, commit when done.\n---\n\n${implementBody}`;
   results.push(installSkillFile(
-    path.join(cwd, '.codex', 'skills', 'aeon-implement', 'SKILL.md'),
+    path.join(cwd, '.codex', 'skills', 'parallely-implement', 'SKILL.md'),
     implSkill,
     'Codex',
   ));
 
   // Also keep AGENTS.md reference for context
   const agentsMdPath = path.join(cwd, 'AGENTS.md');
-  const section = `${AEON_SECTION_MARKER}\n\nThis repo uses [Aeon](aeon/) for parallel agent orchestration.\n- **Planning:** \`/aeon-plan\` — create an execution plan for parallel work\n- **Implementation:** \`/aeon-implement\` — execute a single plan section\n`;
+  const section = `${PARALLELY_SECTION_MARKER}\n\nThis repo uses [Parallely](parallely/) for parallel agent orchestration.\n- **Planning:** \`/parallely-plan\` — create an execution plan for parallel work\n- **Implementation:** \`/parallely-implement\` — execute a single plan section\n`;
   const { action } = appendSectionToFile(agentsMdPath, section);
   results.push({ harness: 'Codex/OpenCode', target: 'AGENTS.md', action });
 
@@ -422,21 +422,21 @@ function buildPlanningPrompt(input: {
   return [
     `You are operating in the repository at: ${input.repoRoot}`,
     '',
-    'Create an Aeon execution plan for the user request below.',
+    'Create an Parallely execution plan for the user request below.',
     `Write plan section files directly into: ${input.planDir}`,
     '',
     '## User Request',
     input.userPrompt,
     '',
     '## Requirements',
-    '- Follow the Aeon planning skill exactly.',
+    '- Follow the Parallely planning skill exactly.',
     '- Create or update numbered markdown files (01-*.md, 02-*.md, ...).',
     '- Ensure each section has frontmatter with title/files/acceptance plus a detailed markdown body.',
     '- Keep sections parallel-friendly with minimal file overlap.',
     '- Do not ask follow-up questions; make reasonable assumptions and proceed.',
-    '- Do not run `aeon run` yourself; stop after writing the plan files.',
+    '- Do not run `parallely run` yourself; stop after writing the plan files.',
     '',
-    '## Aeon Planning Skill',
+    '## Parallely Planning Skill',
     input.skillBody.trim(),
   ].join('\n');
 }
@@ -515,7 +515,7 @@ async function cmdRun(opts: {
 
   const backend = resolveBackend(process.cwd(), opts.backend);
   const config: OrchestratorConfig = {
-    planDir: opts.planDir ?? '.aeon/plan',
+    planDir: opts.planDir ?? '.parallely/plan',
     startCwd: process.cwd(),
     backend,
     model: opts.model?.trim() || undefined,
@@ -526,17 +526,17 @@ async function cmdRun(opts: {
       : 0,
   };
 
-  const orchestrator = new AeonOrchestrator(config);
+  const orchestrator = new ParallelyOrchestrator(config);
 
   // Lazy-load OpenTUI only when the TUI is actually needed
   const { createCliRenderer } = await import('@opentui/core');
   const { createRoot } = await import('@opentui/react');
-  const { AeonTui } = await import('./tui/tui-root.js');
+  const { ParallelyTui } = await import('./tui/tui-root.js');
 
   // OpenTUI manages alternate screen, cursor visibility, and cleanup internally
   const renderer = await createCliRenderer({ exitOnCtrlC: true });
   const root = createRoot(renderer);
-  root.render(<AeonTui orchestrator={orchestrator} />);
+  root.render(<ParallelyTui orchestrator={orchestrator} />);
 
   const result = await orchestrator.run();
 
@@ -557,7 +557,7 @@ async function cmdRun(opts: {
 }
 
 function cmdInit(): void {
-  const planDir = path.join(process.cwd(), '.aeon', 'plan');
+  const planDir = path.join(process.cwd(), '.parallely', 'plan');
   fs.mkdirSync(planDir, { recursive: true });
 
   const example = `---
@@ -589,11 +589,11 @@ The agent will receive this entire markdown body as its prompt.
   process.stdout.write(`\n  ${s.header()}\n\n`);
   process.stdout.write(`  ${s.jade('✦')} Quarried plan directory: ${s.text(planDir)}\n`);
   process.stdout.write(`  ${s.jade('✦')} Template: ${s.text(examplePath)}\n\n`);
-  process.stdout.write(`  ${s.stone('Edit the template and add more .md files, then run:')} ${s.gold('aeon validate')}\n\n`);
+  process.stdout.write(`  ${s.stone('Edit the template and add more .md files, then run:')} ${s.gold('parallely validate')}\n\n`);
 }
 
 function cmdValidate(opts: { planDir?: string }): void {
-  const planDir = path.resolve(process.cwd(), opts.planDir ?? '.aeon/plan');
+  const planDir = path.resolve(process.cwd(), opts.planDir ?? '.parallely/plan');
 
   try {
     const sections = parsePlanDir(planDir);
@@ -635,15 +635,15 @@ function cmdValidate(opts: { planDir?: string }): void {
 }
 
 function cmdStatus(): void {
-  const runsDir = path.join(process.cwd(), '.aeon', 'runs');
+  const runsDir = path.join(process.cwd(), '.parallely', 'runs');
   if (!fs.existsSync(runsDir)) {
-    process.stdout.write(`\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('aeon run')}\n\n`);
+    process.stdout.write(`\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('parallely run')}\n\n`);
     return;
   }
 
   const runs = fs.readdirSync(runsDir).sort().reverse();
   if (runs.length === 0) {
-    process.stdout.write(`\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('aeon run')}\n\n`);
+    process.stdout.write(`\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('parallely run')}\n\n`);
     return;
   }
 
@@ -680,7 +680,7 @@ function cmdStatus(): void {
   }
 
   if (runs.length > 1) {
-    process.stdout.write(`\n  ${s.dim(`${runs.length - 1} older run(s) in .aeon/runs/`)}\n`);
+    process.stdout.write(`\n  ${s.dim(`${runs.length - 1} older run(s) in .parallely/runs/`)}\n`);
   }
   process.stdout.write('\n');
 }
@@ -759,7 +759,7 @@ async function cmdPlan(
   const cwd = process.cwd();
   const backend = resolveBackend(cwd, opts.backend);
   const model = opts.model?.trim() || undefined;
-  const planDir = opts.planDir ?? '.aeon/plan';
+  const planDir = opts.planDir ?? '.parallely/plan';
   const planDirAbs = path.resolve(cwd, planDir);
   const planTimeoutMs = opts.planTimeout
     ? parseNonNegativeInt(opts.planTimeout, 'plan-timeout')
@@ -835,7 +835,7 @@ async function cmdPlan(
     for (const error of validation.errors) {
       process.stderr.write(`    ${s.crimson('✗')} ${s.text(error)}\n`);
     }
-    process.stderr.write(`\n  ${s.crimson('Fix the generated plan, then run:')} ${s.gold(`aeon run -b ${backend}`)}\n\n`);
+    process.stderr.write(`\n  ${s.crimson('Fix the generated plan, then run:')} ${s.gold(`parallely run -b ${backend}`)}\n\n`);
     process.exitCode = 1;
     return;
   }
@@ -847,7 +847,7 @@ async function cmdPlan(
     return;
   }
 
-  process.stdout.write(`  ${s.jade('✦')} ${s.text('Starting aeon run...')}\n\n`);
+  process.stdout.write(`  ${s.jade('✦')} ${s.text('Starting parallely run...')}\n\n`);
   await cmdRun({
     backend,
     model,
@@ -859,7 +859,7 @@ async function cmdPlan(
 }
 
 function cmdPrompt(section: string | undefined, opts: { planDir?: string }): void {
-  const planDir = path.resolve(process.cwd(), opts.planDir ?? '.aeon/plan');
+  const planDir = path.resolve(process.cwd(), opts.planDir ?? '.parallely/plan');
 
   let sections: PlanSection[];
   try {
@@ -910,7 +910,7 @@ function cmdPrompt(section: string | undefined, opts: { planDir?: string }): voi
 function formatSectionPrompt(section: PlanSection, implementSkill: string): string {
   const parts: string[] = [];
 
-  parts.push(`# Aeon Section: ${section.title}\n`);
+  parts.push(`# Parallely Section: ${section.title}\n`);
   parts.push(implementSkill.trim());
   parts.push('\n\n---\n');
   parts.push(section.body);
@@ -942,31 +942,31 @@ function cmdHelp(): void {
   ${s.rule(52)}
 
   ${s.bold('COMMANDS')}
-${cmd('aeon init', 'Quarry a new plan directory')}
-${cmd('aeon plan [prompt]', 'Generate a plan from a prompt, then run')}
-${cmd('aeon validate', 'Inspect plan for fractures')}
-${cmd('aeon run [-b backend]', 'Forge the plan in the TUI')}
-${cmd('aeon prompt [section]', 'Inscribe prompts to stdout')}
-${cmd('aeon setup [--harness name]', 'Install skills into harnesses')}
-${cmd('aeon status', 'Read the last inscription')}
-${cmd('aeon help', 'Show this stone tablet')}
+${cmd('parallely init', 'Quarry a new plan directory')}
+${cmd('parallely plan [prompt]', 'Generate a plan from a prompt, then run')}
+${cmd('parallely validate', 'Inspect plan for fractures')}
+${cmd('parallely run [-b backend]', 'Forge the plan in the TUI')}
+${cmd('parallely prompt [section]', 'Inscribe prompts to stdout')}
+${cmd('parallely setup [--harness name]', 'Install skills into harnesses')}
+${cmd('parallely status', 'Read the last inscription')}
+${cmd('parallely help', 'Show this stone tablet')}
 
   ${s.bold('WORKFLOW')}
-  ${s.gold('1.')} ${s.text('aeon plan "..."')} ${s.stone('━')} ${s.dim('auto-generate plan + run')}
+  ${s.gold('1.')} ${s.text('parallely plan "..."')} ${s.stone('━')} ${s.dim('auto-generate plan + run')}
   ${s.stone('or')}
-  ${s.gold('1.')} ${s.text('aeon init')}       ${s.stone('━')} ${s.dim('quarry plan files')}
-  ${s.gold('2.')} ${s.text('aeon validate')}   ${s.stone('━')} ${s.dim('inspect for fractures')}
-  ${s.gold('3.')} ${s.text('aeon run')}        ${s.stone('━')} ${s.dim('forge with parallel agents')}
+  ${s.gold('1.')} ${s.text('parallely init')}       ${s.stone('━')} ${s.dim('quarry plan files')}
+  ${s.gold('2.')} ${s.text('parallely validate')}   ${s.stone('━')} ${s.dim('inspect for fractures')}
+  ${s.gold('3.')} ${s.text('parallely run')}        ${s.stone('━')} ${s.dim('forge with parallel agents')}
   ${s.stone('or')}
-  ${s.gold('3.')} ${s.text('aeon prompt')}     ${s.stone('━')} ${s.dim('inscribe prompts manually')}
+  ${s.gold('3.')} ${s.text('parallely prompt')}     ${s.stone('━')} ${s.dim('inscribe prompts manually')}
 
   ${s.bold('INSTALL')}
   ${s.gold('1.')} ${s.text('Install Bun')}     ${s.stone('━')} ${s.dim('curl -fsSL https://bun.sh/install | bash')}
   ${s.gold('2.')} ${s.text('Set PATH')}        ${s.stone('━')} ${s.dim('export PATH="$HOME/.bun/bin:$PATH"')}
-  ${s.gold('3.')} ${s.text('Install deps')}    ${s.stone('━')} ${s.dim('cd aeon && npm install --install-strategy=nested')}
-  ${s.gold('4.')} ${s.text('Build aeon')}      ${s.stone('━')} ${s.dim('bun run build')}
-  ${s.gold('5.')} ${s.text('Install global')}  ${s.stone('━')} ${s.dim('npm install -g /abs/path/to/aeon')}
-  ${s.gold('6.')} ${s.text('Verify')}          ${s.stone('━')} ${s.dim('aeon --help')}
+  ${s.gold('3.')} ${s.text('Install deps')}    ${s.stone('━')} ${s.dim('cd parallely && npm install --install-strategy=nested')}
+  ${s.gold('4.')} ${s.text('Build parallely')}      ${s.stone('━')} ${s.dim('bun run build')}
+  ${s.gold('5.')} ${s.text('Install global')}  ${s.stone('━')} ${s.dim('npm install -g /abs/path/to/parallely')}
+  ${s.gold('6.')} ${s.text('Verify')}          ${s.stone('━')} ${s.dim('parallely --help')}
 
 `);
 }
@@ -977,7 +977,7 @@ async function main(): Promise<void> {
   const program = new Command();
 
   program
-    .name('aeon')
+    .name('parallely')
     .description('Parallel agent orchestration — execute plan sections concurrently via AI coding agents')
     .version('0.1.0');
 
@@ -986,7 +986,7 @@ async function main(): Promise<void> {
     .description('Execute the plan')
     .option('-b, --backend <name>', 'Agent backend: codex, claude-code, opencode (default: configured backend)')
     .option('-m, --model <name>', 'Model override for the backend')
-    .option('--plan-dir <path>', 'Path to plan directory (default: .aeon/plan)')
+    .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .option('--no-cleanup', 'Keep the shared integration worktree after run finishes')
     .option('--timeout <ms>', 'Overall timeout per agent in ms (0 disables; default: 0)')
     .option('--inactivity-timeout <ms>', 'Inactivity timeout per agent in ms (0 disables; default: 0)')
@@ -994,7 +994,7 @@ async function main(): Promise<void> {
 
   program
     .command('init')
-    .description('Create .aeon/plan/ with an example template')
+    .description('Create .parallely/plan/ with an example template')
     .action(cmdInit);
 
   program
@@ -1002,18 +1002,18 @@ async function main(): Promise<void> {
     .description('Generate a plan from a prompt via the configured backend, then run it')
     .option('-b, --backend <name>', 'Planning backend: codex, claude-code, opencode (default: configured backend)')
     .option('-m, --model <name>', 'Model override for planning and run')
-    .option('--plan-dir <path>', 'Path to plan directory (default: .aeon/plan)')
+    .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .option('--plan-timeout <ms>', 'Timeout for plan generation in ms (0 disables; default: 0)')
-    .option('--no-run', 'Generate and validate the plan only (skip automatic aeon run)')
+    .option('--no-run', 'Generate and validate the plan only (skip automatic parallely run)')
     .option('--no-cleanup', 'Keep the shared integration worktree after run finishes')
-    .option('--timeout <ms>', 'Overall timeout per agent in ms for aeon run (0 disables; default: 0)')
-    .option('--inactivity-timeout <ms>', 'Inactivity timeout per agent in ms for aeon run (0 disables; default: 0)')
+    .option('--timeout <ms>', 'Overall timeout per agent in ms for parallely run (0 disables; default: 0)')
+    .option('--inactivity-timeout <ms>', 'Inactivity timeout per agent in ms for parallely run (0 disables; default: 0)')
     .action(cmdPlan);
 
   program
     .command('validate')
     .description('Check plan files for errors and warnings')
-    .option('--plan-dir <path>', 'Path to plan directory (default: .aeon/plan)')
+    .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .action(cmdValidate);
 
   program
@@ -1024,12 +1024,12 @@ async function main(): Promise<void> {
   program
     .command('prompt [section]')
     .description('Output prompts for plan sections (pipe into any agent CLI)')
-    .option('--plan-dir <path>', 'Path to plan directory (default: .aeon/plan)')
+    .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .action(cmdPrompt);
 
   program
     .command('setup')
-    .description('Install the Aeon skill into agent harnesses')
+    .description('Install the Parallely skill into agent harnesses')
     .option('--harness <name>', 'Specific harness: claude-code, cursor, codex, opencode, all', 'all')
     .action(cmdSetup);
 

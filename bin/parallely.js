@@ -17,14 +17,14 @@ if (fs.existsSync(distEntry)) {
   entry = distEntry;
 } else if (fs.existsSync(srcEntry)) {
   process.stderr.write(
-    `[aeon] Built bundle missing (${distEntry}). Running from source.\n` +
-      `[aeon] To build once: (cd ${packageDir} && bun run build)\n`,
+    `[parallely] Built bundle missing (${distEntry}). Running from source.\n` +
+      `[parallely] To build once: (cd ${packageDir} && bun run build)\n`,
   );
   entry = srcEntry;
 } else {
   process.stderr.write(
-    '[aeon] Could not find a runnable entrypoint.\n' +
-      `[aeon] Expected one of:\n` +
+    '[parallely] Could not find a runnable entrypoint.\n' +
+      `[parallely] Expected one of:\n` +
       `  - ${distEntry}\n` +
       `  - ${srcEntry}\n`,
   );

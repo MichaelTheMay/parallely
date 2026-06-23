@@ -1,13 +1,10 @@
 {
-  "name": "aeon",
+  "name": "parallely",
   "version": "0.1.0",
   "description": "Parallel agent orchestration CLI — execute plan sections concurrently via AI coding agents",
   "type": "module",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Open-Document-Alliance/Aeon.git"
-  },
+  "author": "Michael May",
   "keywords": [
     "ai",
     "agent",
@@ -19,7 +16,7 @@
     "opencode"
   ],
   "bin": {
-    "aeon": "bin/aeon.js"
+    "parallely": "bin/parallely.js"
   },
   "scripts": {
     "build": "tsup src/index.tsx --format esm --target esnext --out-dir dist --clean",

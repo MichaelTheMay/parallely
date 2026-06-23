@@ -16,14 +16,14 @@ export class WorktreeManager {
   ) {}
 
   get worktreeDir(): string {
-    return path.join(this.repoRoot, '.aeon', 'worktrees', this.runId);
+    return path.join(this.repoRoot, '.parallely', 'worktrees', this.runId);
   }
 
   /**
    * Create a new worktree for a section or integration branch.
    */
   async create(slug: string, startPoint: string): Promise<WorktreeSpec> {
-    const branch = `aeon/${this.runId}/${slug}`;
+    const branch = `parallely/${this.runId}/${slug}`;
     const wtPath = path.join(this.worktreeDir, slug);
 
     fs.mkdirSync(path.dirname(wtPath), { recursive: true });

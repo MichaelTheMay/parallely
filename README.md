@@ -1,19 +1,19 @@
-# Aeon
+# Parallely
 
 Parallel agent orchestration CLI — split large tasks into sections that execute concurrently via AI coding agents, each working in a shared git worktree.
 
-Aeon works with **[Codex](https://github.com/openai/codex)**, **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)**, and **[OpenCode](https://github.com/opencode-ai/opencode)** as backends.
+Parallely works with **[Codex](https://github.com/openai/codex)**, **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)**, and **[OpenCode](https://github.com/opencode-ai/opencode)** as backends.
 
 ## How It Works
 
 1. **Plan** — Define (or AI-generate) a set of parallel sections, each with its own scope and acceptance criteria
-2. **Execute** — Aeon launches one agent per section in a shared git worktree, all running concurrently
+2. **Execute** — Parallely launches one agent per section in a shared git worktree, all running concurrently
 3. **Monitor** — A fullscreen interactive TUI shows real-time progress, output, and token usage for every agent
 4. **Merge** — Changes are auto-committed to a shared integration branch
 
 ```
 ┌──────────────────────────────────────────┐
-│  aeon · Codex · o4-mini           2m 34s │
+│  parallely · Codex · o4-mini           2m 34s │
 │  parse → setup → forge → merge → done    │
 │──────────────────────────────────────────│
 │  › ✓  1  Auth system        done   12.4K │
@@ -37,8 +37,7 @@ Aeon works with **[Codex](https://github.com/openai/codex)**, **[Claude Code](ht
 ### Install from source
 
 ```bash
-git clone https://github.com/Open-Document-Alliance/Aeon.git
-cd Aeon
+cd Parallely
 npm install --install-strategy=nested
 bun run build
 npm install -g .
@@ -47,10 +46,10 @@ npm install -g .
 Verify:
 
 ```bash
-aeon --help
+parallely --help
 ```
 
-> **Why `--install-strategy=nested`?** Aeon uses React 19 with OpenTUI. Nested installs ensure both packages resolve the same React runtime, preventing the "multiple React runtimes" error.
+> **Why `--install-strategy=nested`?** Parallely uses React 19 with OpenTUI. Nested installs ensure both packages resolve the same React runtime, preventing the "multiple React runtimes" error.
 
 ## Quick Start
 
@@ -58,7 +57,7 @@ aeon --help
 
 ```bash
 cd your-project
-aeon plan "Build a REST API with auth, CRUD endpoints, and tests"
+parallely plan "Build a REST API with auth, CRUD endpoints, and tests"
 ```
 
 This invokes an agent to write a parallel plan, validates it, then immediately launches all sections.
@@ -67,38 +66,38 @@ This invokes an agent to write a parallel plan, validates it, then immediately l
 
 ```bash
 cd your-project
-aeon init                  # creates .aeon/plan/ with a template
-# edit .aeon/plan/*.md files
-aeon validate              # check for errors
-aeon run                   # launch agents
+parallely init                  # creates .parallely/plan/ with a template
+# edit .parallely/plan/*.md files
+parallely validate              # check for errors
+parallely run                   # launch agents
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `aeon init` | Create `.aeon/plan/` with an example template |
-| `aeon plan [prompt]` | AI-generate a plan from natural language, then run it |
-| `aeon validate` | Check plan files for errors and warnings |
-| `aeon run` | Execute the plan with an interactive TUI |
-| `aeon prompt [section]` | Output agent prompts to stdout (for manual use) |
-| `aeon setup` | Install Aeon skills into Claude Code / Cursor / Codex / OpenCode |
-| `aeon status` | Show results of the last run |
-| `aeon help` | Display help |
+| `parallely init` | Create `.parallely/plan/` with an example template |
+| `parallely plan [prompt]` | AI-generate a plan from natural language, then run it |
+| `parallely validate` | Check plan files for errors and warnings |
+| `parallely run` | Execute the plan with an interactive TUI |
+| `parallely prompt [section]` | Output agent prompts to stdout (for manual use) |
+| `parallely setup` | Install Parallely skills into Claude Code / Cursor / Codex / OpenCode |
+| `parallely status` | Show results of the last run |
+| `parallely help` | Display help |
 
 ### Common options
 
 ```bash
-aeon run -b claude-code          # use Claude Code backend
-aeon run -b codex -m gpt-4.1    # use Codex with a specific model
-aeon run --timeout 300000        # 5 minute timeout per agent
-aeon run --no-cleanup            # keep the integration worktree after run
-aeon plan "..." --no-run         # generate plan only, don't execute
+parallely run -b claude-code          # use Claude Code backend
+parallely run -b codex -m gpt-4.1    # use Codex with a specific model
+parallely run --timeout 300000        # 5 minute timeout per agent
+parallely run --no-cleanup            # keep the integration worktree after run
+parallely plan "..." --no-run         # generate plan only, don't execute
 ```
 
 ## Plan Format
 
-Each `.md` file in `.aeon/plan/` is one parallel section:
+Each `.md` file in `.parallely/plan/` is one parallel section:
 
 ```markdown
 ---
@@ -175,31 +174,31 @@ Implement JWT-based authentication with login and register endpoints.
 | **Claude Code** | `claude` | `npm install -g @anthropic-ai/claude-code` |
 | **OpenCode** | `opencode` | [github.com/opencode-ai/opencode](https://github.com/opencode-ai/opencode) |
 
-Aeon remembers your last-used backend. Override with `-b`:
+Parallely remembers your last-used backend. Override with `-b`:
 
 ```bash
-aeon run -b claude-code
-aeon run -b codex
-aeon run -b opencode
+parallely run -b claude-code
+parallely run -b codex
+parallely run -b opencode
 ```
 
 ## Setting Up Skills
 
-Install Aeon planning/implementation skills into your editor's agent harness:
+Install Parallely planning/implementation skills into your editor's agent harness:
 
 ```bash
-aeon setup                        # all detected harnesses
-aeon setup --harness claude-code  # Claude Code only
-aeon setup --harness cursor       # Cursor only
+parallely setup                        # all detected harnesses
+parallely setup --harness claude-code  # Claude Code only
+parallely setup --harness cursor       # Cursor only
 ```
 
-This installs skills so agents know how to create and execute Aeon plans when you invoke `/aeon-plan` or `/aeon-implement`.
+This installs skills so agents know how to create and execute Parallely plans when you invoke `/parallely-plan` or `/parallely-implement`.
 
 ## Architecture
 
 ```
-aeon/
-├── bin/aeon.js              # Entry point
+parallely/
+├── bin/parallely.js              # Entry point
 ├── src/
 │   ├── index.tsx            # CLI commands (Commander.js)
 │   ├── orchestrator.ts      # Core orchestration engine

@@ -32,5 +32,5 @@ export const s = {
   warn: (t: string) => `${C.goldDim}${t}${RST}`,
   bold: (t: string) => `${BOLD}${C.text}${t}${RST}`,
   rule: (w: number) => `${C.goldDim}${'─'.repeat(w)}${RST}`,
-  header: () => `${BOLD}${C.gold}ᚲ AEON${RST}`,
+  header: () => `${BOLD}${C.gold}ᚲ PARALLELY${RST}`,
 };

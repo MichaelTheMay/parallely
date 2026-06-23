@@ -28,7 +28,7 @@ function Header({ snapshot, termWidth }: { snapshot: RunSnapshot; termWidth: num
   const backend = BACKEND_LABEL[snapshot.backend] ?? snapshot.backend;
   const model = snapshot.model ? ` · ${snapshot.model}` : '';
   const right = el;
-  const left = `aeon · ${backend}${model}`;
+  const left = `parallely · ${backend}${model}`;
   const fill = Math.max(1, termWidth - left.length - right.length - 4);
 
   return (

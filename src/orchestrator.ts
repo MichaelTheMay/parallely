@@ -39,7 +39,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export class AeonOrchestrator {
+export class ParallelyOrchestrator {
   private config: OrchestratorConfig;
   private runId: string;
   private snapshot: RunSnapshot;
@@ -344,7 +344,7 @@ export class AeonOrchestrator {
         const committed = await this.withGitMutationLock(() =>
           this.worktreeManager.commitIfDirty(
             worktreePath,
-            `aeon: ${section.title}`,
+            `parallely: ${section.title}`,
           ),
         );
 
@@ -849,7 +849,7 @@ export class AeonOrchestrator {
 
   private persistResults(): void {
     try {
-      const runsDir = path.join(this.repoRoot || this.config.startCwd, '.aeon', 'runs', this.runId);
+      const runsDir = path.join(this.repoRoot || this.config.startCwd, '.parallely', 'runs', this.runId);
       fs.mkdirSync(runsDir, { recursive: true });
       const resultsPath = path.join(runsDir, 'results.json');
       fs.writeFileSync(resultsPath, JSON.stringify(this.cloneSnapshot(), null, 2));

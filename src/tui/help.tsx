@@ -41,7 +41,7 @@ export function HelpOverlay({ termWidth, termHeight }: HelpOverlayProps): JSX.El
     >
       <box backgroundColor={BG.stone}>
         <text>
-          <strong><span fg={GLOW.gold}>{' '}ᚲ AEON KEYBINDINGS</span></strong>
+          <strong><span fg={GLOW.gold}>{' '}ᚲ PARALLELY KEYBINDINGS</span></strong>
           {' '.repeat(Math.max(0, termWidth - 26))}
         </text>
       </box>
@@ -51,7 +51,7 @@ export function HelpOverlay({ termWidth, termHeight }: HelpOverlayProps): JSX.El
       <HelpSection
         title="Global"
         bindings={[
-          ['q', 'Quit aeon'],
+          ['q', 'Quit parallely'],
           ['?', 'Toggle this help'],
         ]}
       />

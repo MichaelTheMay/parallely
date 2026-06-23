@@ -1,4 +1,4 @@
-/* ── Core types for Aeon parallel agent orchestrator ── */
+/* ── Core types for Parallely parallel agent orchestrator ── */
 
 export type Backend = 'codex' | 'claude-code' | 'opencode';
 

@@ -1,12 +1,12 @@
-# Aeon Implementation Skill
+# Parallely Implementation Skill
 
 You are implementing **one section** of a larger parallel plan. Other AI agents are working on other sections simultaneously, each in its own isolated git worktree.
 
-## How Aeon works
+## How Parallely works
 
 1. Each section runs in its own git worktree branched from the original local branch
 2. All sections execute in parallel — you cannot see other agents' work
-3. Once every agent finishes, Aeon runs a final cleanup agent that merges all section branches back into the original local branch
+3. Once every agent finishes, Parallely runs a final cleanup agent that merges all section branches back into the original local branch
 
 You don't need to worry about steps 2 or 3. Just do your part and commit.
 

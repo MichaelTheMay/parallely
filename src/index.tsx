@@ -455,6 +455,7 @@ async function runPlanningHarness(input: {
     model: input.model,
     prompt: input.prompt,
     cwd: input.cwd,
+    streamJson: false,
   });
 
   await new Promise<void>((resolve, reject) => {

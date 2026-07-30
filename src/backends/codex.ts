@@ -1,5 +1,12 @@
-import { Codex, type ThreadEvent, type ThreadItem } from '@openai/codex-sdk';
-import type { AgentExecResult, BackendDriver, BackendDriverCallbacks, BackendDriverInput, ParsedBackendEvent, TokenUsage } from '../types.js';
+import { Codex, type ThreadItem } from '@openai/codex-sdk';
+import type {
+  AgentExecResult,
+  BackendDriver,
+  BackendDriverCallbacks,
+  BackendDriverInput,
+  ParsedBackendEvent,
+  TokenUsage,
+} from '../types.js';
 import { EMPTY_USAGE, runCommand } from '../utils.js';
 
 function toDisplayLines(prefix: string, text: string): string[] {
@@ -57,8 +64,12 @@ export function createCodexDriver(): BackendDriver {
     buildArgs(input): { command: string; args: string[] } {
       const json = input.streamJson !== false;
       const args: string[] = input.sessionId
-        ? json ? ['exec', 'resume', '--json'] : ['exec', 'resume']
-        : json ? ['exec', '--json'] : ['exec'];
+        ? json
+          ? ['exec', 'resume', '--json']
+          : ['exec', 'resume']
+        : json
+          ? ['exec', '--json']
+          : ['exec'];
       if (input.yolo) {
         args.push('--full-auto');
       }
@@ -92,7 +103,11 @@ export function createCodexDriver(): BackendDriver {
         };
       }
 
-      if (parsed.type === 'item.completed' && typeof parsed.item === 'object' && parsed.item !== null) {
+      if (
+        parsed.type === 'item.completed' &&
+        typeof parsed.item === 'object' &&
+        parsed.item !== null
+      ) {
         const item = parsed.item as Record<string, unknown>;
         if (item.type === 'agent_message' && typeof item.text === 'string') {
           const text = item.text;
@@ -110,11 +125,7 @@ export function createCodexDriver(): BackendDriver {
         result.displayLines = toDisplayLines('Assistant: ', text);
       }
 
-      if (
-        parsed.type === 'error' &&
-        typeof parsed.message === 'string' &&
-        !result.displayLines
-      ) {
+      if (parsed.type === 'error' && typeof parsed.message === 'string' && !result.displayLines) {
         result.displayLines = [`Error: ${parsed.message}`];
       }
 
@@ -133,8 +144,8 @@ export function createCodexDriver(): BackendDriver {
       const threadOptions = {
         model: input.model,
         workingDirectory: input.cwd,
-        sandboxMode: input.yolo ? 'danger-full-access' as const : 'workspace-write' as const,
-        approvalPolicy: input.yolo ? 'never' as const : 'on-request' as const,
+        sandboxMode: input.yolo ? ('danger-full-access' as const) : ('workspace-write' as const),
+        approvalPolicy: input.yolo ? ('never' as const) : ('on-request' as const),
       };
 
       const thread = input.sessionId

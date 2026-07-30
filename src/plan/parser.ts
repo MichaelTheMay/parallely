@@ -75,7 +75,8 @@ export function parsePlanDir(planDir: string): PlanSection[] {
     throw new Error(`Plan directory not found: ${planDir}`);
   }
 
-  const entries = fs.readdirSync(planDir)
+  const entries = fs
+    .readdirSync(planDir)
     .filter((f) => f.endsWith('.md'))
     .sort();
 

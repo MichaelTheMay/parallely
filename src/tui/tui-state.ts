@@ -58,11 +58,7 @@ function collectPaneIds(node: LayoutNode): string[] {
 }
 
 /** Replace a leaf node in the layout tree */
-function replaceLeaf(
-  node: LayoutNode,
-  targetPaneId: string,
-  replacement: LayoutNode,
-): LayoutNode {
+function replaceLeaf(node: LayoutNode, targetPaneId: string, replacement: LayoutNode): LayoutNode {
   if (node.type === 'leaf') {
     return node.paneId === targetPaneId ? replacement : node;
   }
@@ -267,7 +263,10 @@ export function tuiReducer(state: TuiState, action: TuiAction): TuiState {
     }
 
     case 'SELECT_SECTION': {
-      const newIdx = Math.max(0, Math.min(state.sectionCount - 1, state.selectedSectionIndex + action.delta));
+      const newIdx = Math.max(
+        0,
+        Math.min(state.sectionCount - 1, state.selectedSectionIndex + action.delta),
+      );
       return { ...state, selectedSectionIndex: newIdx };
     }
 

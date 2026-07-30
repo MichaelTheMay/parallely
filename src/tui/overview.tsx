@@ -2,9 +2,17 @@
 
 import type { Phase, RunSnapshot, SectionSnapshot } from '../types.js';
 import {
-  BG, GLOW, STATUS,
-  SPINNER_FRAMES, STATUS_ICONS, STATUS_LABELS, STATUS_COLORS,
-  BACKEND_LABEL, PHASE_ORDER, PHASE_LABEL, TICK_INTERVAL_MS,
+  BG,
+  GLOW,
+  STATUS,
+  SPINNER_FRAMES,
+  STATUS_ICONS,
+  STATUS_LABELS,
+  STATUS_COLORS,
+  BACKEND_LABEL,
+  PHASE_ORDER,
+  PHASE_LABEL,
+  TICK_INTERVAL_MS,
 } from './theme.js';
 import { DashboardPanel } from './dashboard-panel.js';
 import { useTimer } from './hooks.js';
@@ -22,7 +30,13 @@ function StatusIcon({ section }: { section: SectionSnapshot }): JSX.Element {
   return <text fg={STATUS_COLORS[section.status]}>{STATUS_ICONS[section.status]}</text>;
 }
 
-function Header({ snapshot, termWidth }: { snapshot: RunSnapshot; termWidth: number }): JSX.Element {
+function Header({
+  snapshot,
+  termWidth,
+}: {
+  snapshot: RunSnapshot;
+  termWidth: number;
+}): JSX.Element {
   useTimer(1000);
   const el = elapsed(snapshot.startedAt);
   const backend = BACKEND_LABEL[snapshot.backend] ?? snapshot.backend;
@@ -34,7 +48,9 @@ function Header({ snapshot, termWidth }: { snapshot: RunSnapshot; termWidth: num
   return (
     <box backgroundColor={BG.stone} paddingLeft={1} paddingRight={1}>
       <text>
-        <strong><span fg={GLOW.gold}>{left}</span></strong>
+        <strong>
+          <span fg={GLOW.gold}>{left}</span>
+        </strong>
         {' '.repeat(fill)}
         <span fg={STATUS.muted}>{right}</span>
       </text>
@@ -43,7 +59,7 @@ function Header({ snapshot, termWidth }: { snapshot: RunSnapshot; termWidth: num
 }
 
 function PhaseBar({ phase }: { phase: Phase }): JSX.Element {
-  const activeIdx = PHASE_ORDER.indexOf(phase as typeof PHASE_ORDER[number]);
+  const activeIdx = PHASE_ORDER.indexOf(phase as (typeof PHASE_ORDER)[number]);
 
   return (
     <box paddingLeft={1} paddingRight={1}>
@@ -51,10 +67,33 @@ function PhaseBar({ phase }: { phase: Phase }): JSX.Element {
         {PHASE_ORDER.map((p, i) => {
           const label = PHASE_LABEL[p] ?? p;
           const sep = i < PHASE_ORDER.length - 1 ? ' → ' : '';
-          if (phase === 'error' && i <= activeIdx) return <span key={p} fg={STATUS.error}>{label}{sep}</span>;
-          if (i < activeIdx) return <span key={p} fg={STATUS.muted}>{label}{sep}</span>;
-          if (i === activeIdx) return <span key={p} fg={GLOW.gold}><strong>{label}</strong>{sep}</span>;
-          return <span key={p}>{label}{sep}</span>;
+          if (phase === 'error' && i <= activeIdx)
+            return (
+              <span key={p} fg={STATUS.error}>
+                {label}
+                {sep}
+              </span>
+            );
+          if (i < activeIdx)
+            return (
+              <span key={p} fg={STATUS.muted}>
+                {label}
+                {sep}
+              </span>
+            );
+          if (i === activeIdx)
+            return (
+              <span key={p} fg={GLOW.gold}>
+                <strong>{label}</strong>
+                {sep}
+              </span>
+            );
+          return (
+            <span key={p}>
+              {label}
+              {sep}
+            </span>
+          );
         })}
       </text>
     </box>
@@ -62,7 +101,9 @@ function PhaseBar({ phase }: { phase: Phase }): JSX.Element {
 }
 
 function SectionTable({
-  sections, termWidth, selectedIndex,
+  sections,
+  termWidth,
+  selectedIndex,
 }: {
   sections: SectionSnapshot[];
   termWidth: number;
@@ -71,18 +112,17 @@ function SectionTable({
   const infoWidth = Math.max(10, termWidth - 55);
   const visibleCount = Math.min(MAX_VISIBLE_SECTIONS, sections.length);
   const half = Math.floor(visibleCount / 2);
-  const start = sections.length > visibleCount
-    ? Math.max(0, Math.min(sections.length - visibleCount, selectedIndex - half))
-    : 0;
+  const start =
+    sections.length > visibleCount
+      ? Math.max(0, Math.min(sections.length - visibleCount, selectedIndex - half))
+      : 0;
   const visibleSections = sections.slice(start, start + visibleCount);
   const hasMoreAbove = start > 0;
   const hasMoreBelow = start + visibleCount < sections.length;
 
   return (
     <box flexDirection="column" paddingLeft={1} paddingRight={1}>
-      <text fg={STATUS.muted}>
-        {'   #  section              status   tokens   info'}
-      </text>
+      <text fg={STATUS.muted}>{'   #  section              status   tokens   info'}</text>
       {hasMoreAbove && (
         <text fg={STATUS.muted}>
           {'   ↑ '}
@@ -139,10 +179,16 @@ function CompletionPanel({ snapshot }: { snapshot: RunSnapshot }): JSX.Element |
 
   return (
     <box flexDirection="column" paddingLeft={1} paddingRight={1} marginTop={1}>
-      <text fg={color}><strong>{label}</strong></text>
-      <text fg={STATUS.muted}>{done} done, {fail} failed</text>
+      <text fg={color}>
+        <strong>{label}</strong>
+      </text>
+      <text fg={STATUS.muted}>
+        {done} done, {fail} failed
+      </text>
       {snapshot.integrationBranch && (
-        <text fg={STATUS.muted}>branch: <span fg={STATUS.text}>{snapshot.integrationBranch}</span></text>
+        <text fg={STATUS.muted}>
+          branch: <span fg={STATUS.text}>{snapshot.integrationBranch}</span>
+        </text>
       )}
     </box>
   );
@@ -154,7 +200,9 @@ function LogPanel({ logs, maxLines }: { logs: string[]; maxLines: number }): JSX
   return (
     <box flexDirection="column" paddingLeft={1} paddingRight={1} marginTop={1}>
       {visible.map((log, i) => (
-        <text key={i} fg={STATUS.muted}>{log}</text>
+        <text key={i} fg={STATUS.muted}>
+          {log}
+        </text>
       ))}
     </box>
   );
@@ -170,7 +218,10 @@ interface OverviewScreenProps {
 }
 
 export function OverviewScreen({
-  snapshot, selectedIndex, termWidth, termHeight,
+  snapshot,
+  selectedIndex,
+  termWidth,
+  termHeight,
 }: OverviewScreenProps): JSX.Element {
   const frameWidth = Math.max(20, termWidth);
   const frameHeight = Math.max(3, termHeight - 1);
@@ -212,7 +263,11 @@ export function OverviewScreen({
         <text fg={GLOW.taupeDim}>{'─'.repeat(innerWidth)}</text>
       </box>
 
-      <SectionTable sections={snapshot.sections} termWidth={frameWidth} selectedIndex={selectedIndex} />
+      <SectionTable
+        sections={snapshot.sections}
+        termWidth={frameWidth}
+        selectedIndex={selectedIndex}
+      />
       <CompletionPanel snapshot={snapshot} />
       <LogPanel logs={snapshot.logs} maxLines={availableLogLines} />
       <box flexGrow={1} />

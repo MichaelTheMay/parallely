@@ -27,7 +27,11 @@ export const INITIAL_CHAT_STATE: ChatInputState = {
   historyIndex: -1,
 };
 
-export function openChat(sectionId: string, sectionLabel: string, prev: ChatInputState): ChatInputState {
+export function openChat(
+  sectionId: string,
+  sectionLabel: string,
+  prev: ChatInputState,
+): ChatInputState {
   return {
     ...prev,
     active: true,
@@ -42,7 +46,15 @@ export function openChat(sectionId: string, sectionLabel: string, prev: ChatInpu
 }
 
 export function closeChat(prev: ChatInputState): ChatInputState {
-  return { ...prev, active: false, draft: '', cursor: 0, sending: false, error: undefined, historyIndex: -1 };
+  return {
+    ...prev,
+    active: false,
+    draft: '',
+    cursor: 0,
+    sending: false,
+    error: undefined,
+    historyIndex: -1,
+  };
 }
 
 export function chatSending(prev: ChatInputState): ChatInputState {
@@ -125,9 +137,8 @@ export function handleChatKey(
 
   // History: Up/Down
   if (key.name === 'up' && state.history.length > 0) {
-    const newIdx = state.historyIndex < 0
-      ? state.history.length - 1
-      : Math.max(0, state.historyIndex - 1);
+    const newIdx =
+      state.historyIndex < 0 ? state.history.length - 1 : Math.max(0, state.historyIndex - 1);
     const draft = state.history[newIdx] ?? '';
     return { ...state, draft, cursor: draft.length, historyIndex: newIdx, error: undefined };
   }
@@ -179,7 +190,7 @@ interface ChatInputBarProps {
   height?: number;
 }
 
-export function ChatInputBar({ state, termWidth, height = 3 }: ChatInputBarProps): JSX.Element {
+export function ChatInputBar({ state, termWidth }: ChatInputBarProps): JSX.Element {
   const tick = useTimer(TICK_INTERVAL_MS);
 
   if (!state.active) return <box />;
@@ -214,7 +225,10 @@ export function ChatInputBar({ state, termWidth, height = 3 }: ChatInputBarProps
         ? 'Enter send  Esc cancel  ↑↓ history'
         : 'Enter send  Esc cancel';
 
-  const hintGap = Math.max(0, termWidth - promptPrefix.length - visibleDraft.length - hints.length - 6);
+  const hintGap = Math.max(
+    0,
+    termWidth - promptPrefix.length - visibleDraft.length - hints.length - 6,
+  );
 
   return (
     <box flexDirection="column" width={termWidth}>

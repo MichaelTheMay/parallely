@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type {
   AgentExecResult,
-  Backend,
   BackendDriver,
   OrchestratorConfig,
   Phase,
@@ -13,14 +12,7 @@ import type {
   SectionSnapshot,
   TokenUsage,
 } from './types.js';
-import {
-  EMPTY_USAGE,
-  addUsage,
-  generateRunId,
-  nowIso,
-  resolveSpawn,
-  runCommand,
-} from './utils.js';
+import { EMPTY_USAGE, addUsage, generateRunId, nowIso, resolveSpawn, runCommand } from './utils.js';
 import { getDriver } from './backends/driver.js';
 import { parsePlanDir } from './plan/parser.js';
 import { validatePlan } from './plan/validator.js';
@@ -127,12 +119,9 @@ export class ParallelyOrchestrator {
     this.addLog(`Message sent to "${section.title}"`);
 
     try {
-      const result = await this.runAgent(
-        sectionId,
-        section.worktreePath,
-        message,
-        { sessionId: section.sessionId },
-      );
+      const result = await this.runAgent(sectionId, section.worktreePath, message, {
+        sessionId: section.sessionId,
+      });
 
       if (result.timedOut) {
         throw new Error('Agent timed out');
@@ -342,10 +331,7 @@ export class ParallelyOrchestrator {
         }
 
         const committed = await this.withGitMutationLock(() =>
-          this.worktreeManager.commitIfDirty(
-            worktreePath,
-            `parallely: ${section.title}`,
-          ),
+          this.worktreeManager.commitIfDirty(worktreePath, `parallely: ${section.title}`),
         );
 
         if (result.timedOut) {
@@ -374,7 +360,7 @@ export class ParallelyOrchestrator {
             sessionId = undefined;
             this.addLog(
               `Section "${section.title}" exited ${result.exitCode}; retrying` +
-              (stderrTail ? ` (${stderrTail})` : ''),
+                (stderrTail ? ` (${stderrTail})` : ''),
             );
             continue;
           }
@@ -393,8 +379,8 @@ export class ParallelyOrchestrator {
 
         const filesChanged = committed
           ? await this.withGitMutationLock(() =>
-            this.worktreeManager.countChangedFiles(worktreePath),
-          )
+              this.worktreeManager.countChangedFiles(worktreePath),
+            )
           : 0;
 
         if (result.exitCode !== 0 && committed) {
@@ -624,7 +610,7 @@ export class ParallelyOrchestrator {
         timeoutReason = reason;
         this.addLog(
           `Killing agent for "${sectionId}": ` +
-          (reason === 'overall' ? 'overall timeout' : 'inactivity timeout'),
+            (reason === 'overall' ? 'overall timeout' : 'inactivity timeout'),
         );
         child.kill('SIGTERM');
         setTimeout(() => child.kill('SIGKILL'), 5_000);
@@ -633,10 +619,7 @@ export class ParallelyOrchestrator {
       let overallTimer: ReturnType<typeof setTimeout> | null = null;
       const overallEnabled = this.config.timeoutMs > 0;
       if (overallEnabled) {
-        overallTimer = setTimeout(
-          () => killChild('overall'),
-          this.config.timeoutMs,
-        );
+        overallTimer = setTimeout(() => killChild('overall'), this.config.timeoutMs);
       }
 
       let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
@@ -651,7 +634,10 @@ export class ParallelyOrchestrator {
       const resetInactivity = () => {
         if (!inactivityEnabled) return;
         if (inactivityTimer) clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => killChild('inactivity'), this.config.inactivityTimeoutMs);
+        inactivityTimer = setTimeout(
+          () => killChild('inactivity'),
+          this.config.inactivityTimeoutMs,
+        );
       };
 
       const outputStream = this.outputStreams.get(sectionId);
@@ -849,7 +835,12 @@ export class ParallelyOrchestrator {
 
   private persistResults(): void {
     try {
-      const runsDir = path.join(this.repoRoot || this.config.startCwd, '.parallely', 'runs', this.runId);
+      const runsDir = path.join(
+        this.repoRoot || this.config.startCwd,
+        '.parallely',
+        'runs',
+        this.runId,
+      );
       fs.mkdirSync(runsDir, { recursive: true });
       const resultsPath = path.join(runsDir, 'results.json');
       fs.writeFileSync(resultsPath, JSON.stringify(this.cloneSnapshot(), null, 2));

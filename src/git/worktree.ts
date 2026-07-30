@@ -29,9 +29,12 @@ export class WorktreeManager {
     fs.mkdirSync(path.dirname(wtPath), { recursive: true });
 
     await runCommand('git', [
-      '-C', this.repoRoot,
-      'worktree', 'add',
-      '-b', branch,
+      '-C',
+      this.repoRoot,
+      'worktree',
+      'add',
+      '-b',
+      branch,
       wtPath,
       startPoint,
     ]);
@@ -50,11 +53,9 @@ export class WorktreeManager {
     if (!status.stdout.trim()) return false;
 
     await runCommand('git', ['-C', wtPath, 'add', '-A']);
-    const commit = await runCommand(
-      'git',
-      ['-C', wtPath, 'commit', '-m', message],
-      { allowFailure: true },
-    );
+    const commit = await runCommand('git', ['-C', wtPath, 'commit', '-m', message], {
+      allowFailure: true,
+    });
     if (commit.code === 0) return true;
 
     const combined = `${commit.stdout}\n${commit.stderr}`.toLowerCase();
@@ -88,7 +89,16 @@ export class WorktreeManager {
     // Retry with -X theirs (section wins)
     const retry = await runCommand(
       'git',
-      ['-C', integrationPath, 'merge', '-X', 'theirs', sectionBranch, '-m', `${message} (auto-resolved)`],
+      [
+        '-C',
+        integrationPath,
+        'merge',
+        '-X',
+        'theirs',
+        sectionBranch,
+        '-m',
+        `${message} (auto-resolved)`,
+      ],
       { allowFailure: true },
     );
 
@@ -103,11 +113,9 @@ export class WorktreeManager {
    * Count changed files in a worktree vs its parent commit.
    */
   async countChangedFiles(wtPath: string): Promise<number> {
-    const result = await runCommand(
-      'git',
-      ['-C', wtPath, 'diff', '--name-only', 'HEAD~1'],
-      { allowFailure: true },
-    );
+    const result = await runCommand('git', ['-C', wtPath, 'diff', '--name-only', 'HEAD~1'], {
+      allowFailure: true,
+    });
     if (result.code !== 0) return 0;
     return result.stdout.trim().split('\n').filter(Boolean).length;
   }
@@ -128,11 +136,7 @@ export class WorktreeManager {
     }
 
     this.worktrees = remaining;
-    await runCommand(
-      'git',
-      ['-C', this.repoRoot, 'worktree', 'prune'],
-      { allowFailure: true },
-    );
+    await runCommand('git', ['-C', this.repoRoot, 'worktree', 'prune'], { allowFailure: true });
   }
 
   /**
@@ -142,11 +146,7 @@ export class WorktreeManager {
     for (const wt of this.worktrees) {
       await this.removeWorktree(wt.path);
     }
-    await runCommand(
-      'git',
-      ['-C', this.repoRoot, 'worktree', 'prune'],
-      { allowFailure: true },
-    );
+    await runCommand('git', ['-C', this.repoRoot, 'worktree', 'prune'], { allowFailure: true });
     this.worktrees = [];
 
     // Remove the worktree directory
@@ -157,10 +157,8 @@ export class WorktreeManager {
   }
 
   private async removeWorktree(wtPath: string): Promise<void> {
-    await runCommand(
-      'git',
-      ['-C', this.repoRoot, 'worktree', 'remove', '--force', wtPath],
-      { allowFailure: true },
-    );
+    await runCommand('git', ['-C', this.repoRoot, 'worktree', 'remove', '--force', wtPath], {
+      allowFailure: true,
+    });
   }
 }

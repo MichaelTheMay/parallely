@@ -3,21 +3,10 @@
 export type Backend = 'codex' | 'claude-code' | 'opencode';
 
 export type Phase =
-  | 'idle'
-  | 'parsing'
-  | 'worktree_setup'
-  | 'executing'
-  | 'merging'
-  | 'done'
-  | 'error';
+  'idle' | 'parsing' | 'worktree_setup' | 'executing' | 'merging' | 'done' | 'error';
 
 export type SectionStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'skipped'
-  | 'merge_conflict';
+  'pending' | 'running' | 'completed' | 'failed' | 'skipped' | 'merge_conflict';
 
 export interface TokenUsage {
   input: number;
@@ -163,13 +152,17 @@ export interface PaneState {
   autoScroll: boolean;
 }
 
-export type PaneContent =
-  | { type: 'overview' }
-  | { type: 'agent'; sectionId: string };
+export type PaneContent = { type: 'overview' } | { type: 'agent'; sectionId: string };
 
 export type LayoutNode =
   | { type: 'leaf'; paneId: string }
-  | { type: 'split'; direction: 'horizontal' | 'vertical'; ratio: number; first: LayoutNode; second: LayoutNode };
+  | {
+      type: 'split';
+      direction: 'horizontal' | 'vertical';
+      ratio: number;
+      first: LayoutNode;
+      second: LayoutNode;
+    };
 
 export interface ValidationWarning {
   file: string;

@@ -19,14 +19,6 @@ import type { Backend, OrchestratorConfig, PlanSection, RunSnapshot } from './ty
 
 /* ── Helpers ── */
 
-function parsePositiveInt(raw: string, label: string): number {
-  const value = Number.parseInt(raw, 10);
-  if (!Number.isFinite(value) || value < 1) {
-    throw new Error(`${label} must be a positive integer`);
-  }
-  return value;
-}
-
 function parseNonNegativeInt(raw: string, label: string): number {
   const value = Number.parseInt(raw, 10);
   if (!Number.isFinite(value) || value < 0) {
@@ -37,7 +29,8 @@ function parseNonNegativeInt(raw: string, label: string): number {
 
 function parseBackend(raw: string): Backend {
   const normalized = raw.trim().toLowerCase();
-  if (normalized === 'claude-code' || normalized === 'claude' || normalized === 'cc') return 'claude-code';
+  if (normalized === 'claude-code' || normalized === 'claude' || normalized === 'cc')
+    return 'claude-code';
   if (normalized === 'codex') return 'codex';
   if (normalized === 'opencode' || normalized === 'oc') return 'opencode';
   throw new Error(`Unknown backend "${raw}". Supported: claude-code, codex, opencode`);
@@ -70,7 +63,7 @@ function ensureSingleReactRuntime(): void {
       [
         'React is missing for parallely.',
         `Install dependencies from: ${packageDir}`,
-        '  npm install --install-strategy=nested',
+        '  bun install    (or: npm install --install-strategy=nested)',
         '  bun run build',
       ].join('\n'),
     );
@@ -83,7 +76,7 @@ function ensureSingleReactRuntime(): void {
     openTuiReactPath = openTuiRequire.resolve('react');
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(`Failed to resolve @opentui/react runtime (${detail})`);
+    throw new Error(`Failed to resolve @opentui/react runtime (${detail})`, { cause: err });
   }
 
   if (parallelyReactPath === openTuiReactPath) return;
@@ -94,7 +87,7 @@ function ensureSingleReactRuntime(): void {
       `parallely resolves react as: ${parallelyReactPath}`,
       `@opentui/react resolves react as: ${openTuiReactPath}`,
       `Reinstall dependencies from: ${packageDir}`,
-      '  npm install --install-strategy=nested',
+      '  bun install    (or: npm install --install-strategy=nested)',
       '  bun run build',
     ].join('\n'),
   );
@@ -178,18 +171,13 @@ const ALL_HARNESSES: Harness[] = ['claude-code', 'cursor', 'codex', 'opencode'];
 
 function resolveSkillFile(filename: string): string {
   // Resolve relative to the package directory (bin/parallely.js → ../)
-  const packageDir = path.resolve(
-    path.dirname(fileURLToPath(import.meta.url)),
-    '..',
-  );
+  const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const skillPath = path.join(packageDir, 'skill', filename);
   if (!fs.existsSync(skillPath)) {
     // Fallback: resolve from cwd (dev mode)
     const cwdSkillPath = path.join(process.cwd(), 'parallely', 'skill', filename);
     if (fs.existsSync(cwdSkillPath)) return cwdSkillPath;
-    throw new Error(
-      `Cannot find ${filename} at ${skillPath} or ${cwdSkillPath}`,
-    );
+    throw new Error(`Cannot find ${filename} at ${skillPath} or ${cwdSkillPath}`);
   }
   return skillPath;
 }
@@ -236,11 +224,7 @@ interface SetupResult {
   action: 'created' | 'updated' | 'skipped';
 }
 
-function installSkillFile(
-  targetPath: string,
-  content: string,
-  harness: string,
-): SetupResult {
+function installSkillFile(targetPath: string, content: string, harness: string): SetupResult {
   const relTarget = path.relative(process.cwd(), targetPath);
   if (fs.existsSync(targetPath)) {
     const existing = fs.readFileSync(targetPath, 'utf-8');
@@ -260,19 +244,23 @@ function setupClaudeCode(cwd: string, skillBody: string, implementBody: string):
 
   // Install planning skill
   const planSkill = `---\nname: parallely-plan\ndescription: Create an Parallely parallel execution plan that splits work across multiple AI agents running concurrently in separate worktrees.\n---\n\n${skillBody}`;
-  results.push(installSkillFile(
-    path.join(cwd, '.claude', 'skills', 'parallely-plan', 'SKILL.md'),
-    planSkill,
-    'Claude Code',
-  ));
+  results.push(
+    installSkillFile(
+      path.join(cwd, '.claude', 'skills', 'parallely-plan', 'SKILL.md'),
+      planSkill,
+      'Claude Code',
+    ),
+  );
 
   // Install implementation skill
   const implSkill = `---\nname: parallely-implement\ndescription: Execute a single Parallely plan section in an isolated worktree — stay in scope, follow acceptance criteria, commit when done.\n---\n\n${implementBody}`;
-  results.push(installSkillFile(
-    path.join(cwd, '.claude', 'skills', 'parallely-implement', 'SKILL.md'),
-    implSkill,
-    'Claude Code',
-  ));
+  results.push(
+    installSkillFile(
+      path.join(cwd, '.claude', 'skills', 'parallely-implement', 'SKILL.md'),
+      implSkill,
+      'Claude Code',
+    ),
+  );
 
   // Also keep CLAUDE.md reference for context
   const claudeMdPath = path.join(cwd, 'CLAUDE.md');
@@ -288,19 +276,23 @@ function setupCursorSkill(cwd: string, skillBody: string, implementBody: string)
 
   // Planning skill
   const planSkill = `---\nname: parallely\ndescription: Parallel agent orchestration — create Parallely execution plans that split work across multiple AI agents running concurrently.\n---\n\n${skillBody}`;
-  results.push(installSkillFile(
-    path.join(cwd, '.cursor', 'skills', 'parallely', 'SKILL.md'),
-    planSkill,
-    'Cursor',
-  ));
+  results.push(
+    installSkillFile(
+      path.join(cwd, '.cursor', 'skills', 'parallely', 'SKILL.md'),
+      planSkill,
+      'Cursor',
+    ),
+  );
 
   // Implementation skill
   const implSkill = `---\nname: parallely-implement\ndescription: Implementation skill for executing a single Parallely plan section in an isolated worktree.\n---\n\n${implementBody}`;
-  results.push(installSkillFile(
-    path.join(cwd, '.cursor', 'skills', 'parallely', 'IMPLEMENT.md'),
-    implSkill,
-    'Cursor',
-  ));
+  results.push(
+    installSkillFile(
+      path.join(cwd, '.cursor', 'skills', 'parallely', 'IMPLEMENT.md'),
+      implSkill,
+      'Cursor',
+    ),
+  );
 
   return results;
 }
@@ -310,7 +302,11 @@ function setupCursorRule(cwd: string): SetupResult {
   const ruleFile = path.join(rulesDir, 'parallely-parallel-plans.mdc');
 
   if (fs.existsSync(ruleFile)) {
-    return { harness: 'Cursor', target: '.cursor/rules/parallely-parallel-plans.mdc', action: 'skipped' };
+    return {
+      harness: 'Cursor',
+      target: '.cursor/rules/parallely-parallel-plans.mdc',
+      action: 'skipped',
+    };
   }
 
   fs.mkdirSync(rulesDir, { recursive: true });
@@ -326,7 +322,11 @@ globs: .parallely/plan/**
 When creating or editing Parallely execution plans, follow the full skill at \`.cursor/skills/parallely/SKILL.md\`.
 `;
   fs.writeFileSync(ruleFile, content);
-  return { harness: 'Cursor', target: '.cursor/rules/parallely-parallel-plans.mdc', action: 'created' };
+  return {
+    harness: 'Cursor',
+    target: '.cursor/rules/parallely-parallel-plans.mdc',
+    action: 'created',
+  };
 }
 
 function setupCodexOpenCode(cwd: string, skillBody: string, implementBody: string): SetupResult[] {
@@ -334,19 +334,23 @@ function setupCodexOpenCode(cwd: string, skillBody: string, implementBody: strin
 
   // Install planning skill to .codex/skills/ (Codex discovers these)
   const planSkill = `---\nname: parallely-plan\ndescription: Create an Parallely parallel execution plan that splits work across multiple AI agents running concurrently in separate worktrees.\n---\n\n${skillBody}`;
-  results.push(installSkillFile(
-    path.join(cwd, '.codex', 'skills', 'parallely-plan', 'SKILL.md'),
-    planSkill,
-    'Codex',
-  ));
+  results.push(
+    installSkillFile(
+      path.join(cwd, '.codex', 'skills', 'parallely-plan', 'SKILL.md'),
+      planSkill,
+      'Codex',
+    ),
+  );
 
   // Install implementation skill
   const implSkill = `---\nname: parallely-implement\ndescription: Execute a single Parallely plan section in an isolated worktree — stay in scope, follow acceptance criteria, commit when done.\n---\n\n${implementBody}`;
-  results.push(installSkillFile(
-    path.join(cwd, '.codex', 'skills', 'parallely-implement', 'SKILL.md'),
-    implSkill,
-    'Codex',
-  ));
+  results.push(
+    installSkillFile(
+      path.join(cwd, '.codex', 'skills', 'parallely-implement', 'SKILL.md'),
+      implSkill,
+      'Codex',
+    ),
+  );
 
   // Also keep AGENTS.md reference for context
   const agentsMdPath = path.join(cwd, 'AGENTS.md');
@@ -374,7 +378,8 @@ function detectHarnesses(cwd: string): Harness[] {
 function parseHarness(raw: string): Harness[] {
   const normalized = raw.trim().toLowerCase();
   if (normalized === 'all') return ALL_HARNESSES;
-  if (normalized === 'claude-code' || normalized === 'claude' || normalized === 'cc') return ['claude-code'];
+  if (normalized === 'claude-code' || normalized === 'claude' || normalized === 'cc')
+    return ['claude-code'];
   if (normalized === 'cursor') return ['cursor'];
   if (normalized === 'codex') return ['codex'];
   if (normalized === 'opencode' || normalized === 'oc') return ['opencode'];
@@ -546,13 +551,17 @@ async function cmdRun(opts: {
   renderer.destroy();
 
   if (result.success) {
-    process.stdout.write(`\n  ${s.jade('✦')} ${s.text(`Run ${result.runId}:`)} ${s.jade(`${result.sectionsCompleted}/${result.sectionsTotal} sections hewn`)}\n`);
+    process.stdout.write(
+      `\n  ${s.jade('✦')} ${s.text(`Run ${result.runId}:`)} ${s.jade(`${result.sectionsCompleted}/${result.sectionsTotal} sections hewn`)}\n`,
+    );
     if (result.integrationBranch) {
       process.stdout.write(`  ${s.stone('Branch:')} ${s.text(result.integrationBranch)}\n`);
     }
     process.stdout.write('\n');
   } else {
-    process.stderr.write(`\n  ${s.crimson('✗')} ${s.crimson(`Shattered: ${result.error ?? 'unknown fracture'}`)}\n\n`);
+    process.stderr.write(
+      `\n  ${s.crimson('✗')} ${s.crimson(`Shattered: ${result.error ?? 'unknown fracture'}`)}\n\n`,
+    );
     process.exitCode = 1;
   }
 }
@@ -582,7 +591,9 @@ The agent will receive this entire markdown body as its prompt.
 
   const examplePath = path.join(planDir, '01-example.md');
   if (fs.existsSync(examplePath)) {
-    process.stdout.write(`\n  ${s.stone('◫')} Plan directory already exists at ${s.dim(planDir)}\n\n`);
+    process.stdout.write(
+      `\n  ${s.stone('◫')} Plan directory already exists at ${s.dim(planDir)}\n\n`,
+    );
     return;
   }
 
@@ -590,7 +601,9 @@ The agent will receive this entire markdown body as its prompt.
   process.stdout.write(`\n  ${s.header()}\n\n`);
   process.stdout.write(`  ${s.jade('✦')} Quarried plan directory: ${s.text(planDir)}\n`);
   process.stdout.write(`  ${s.jade('✦')} Template: ${s.text(examplePath)}\n\n`);
-  process.stdout.write(`  ${s.stone('Edit the template and add more .md files, then run:')} ${s.gold('parallely validate')}\n\n`);
+  process.stdout.write(
+    `  ${s.stone('Edit the template and add more .md files, then run:')} ${s.gold('parallely validate')}\n\n`,
+  );
 }
 
 function cmdValidate(opts: { planDir?: string }): void {
@@ -606,9 +619,15 @@ function cmdValidate(opts: { planDir?: string }): void {
     process.stdout.write(`  ${s.stone('Sections')}  ${s.text(String(sections.length))}\n\n`);
 
     for (const section of sections) {
-      process.stdout.write(`  ${s.gold(String(section.index + 1).padStart(2))}  ${s.text(section.title)} ${s.dim(`(${section.filename})`)}\n`);
-      process.stdout.write(`      ${s.stone('Files:')} ${s.dim(section.files.length > 0 ? section.files.join(', ') : '(none)')}\n`);
-      process.stdout.write(`      ${s.stone('Acceptance:')} ${s.dim(`${section.acceptance.length} criteria`)}\n`);
+      process.stdout.write(
+        `  ${s.gold(String(section.index + 1).padStart(2))}  ${s.text(section.title)} ${s.dim(`(${section.filename})`)}\n`,
+      );
+      process.stdout.write(
+        `      ${s.stone('Files:')} ${s.dim(section.files.length > 0 ? section.files.join(', ') : '(none)')}\n`,
+      );
+      process.stdout.write(
+        `      ${s.stone('Acceptance:')} ${s.dim(`${section.acceptance.length} criteria`)}\n`,
+      );
     }
 
     if (result.warnings.length > 0) {
@@ -630,7 +649,9 @@ function cmdValidate(opts: { planDir?: string }): void {
     process.stdout.write('\n');
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`\n  ${s.crimson('✗')} ${s.crimson(`Validation shattered: ${message}`)}\n\n`);
+    process.stderr.write(
+      `\n  ${s.crimson('✗')} ${s.crimson(`Validation shattered: ${message}`)}\n\n`,
+    );
     process.exitCode = 1;
   }
 }
@@ -638,13 +659,17 @@ function cmdValidate(opts: { planDir?: string }): void {
 function cmdStatus(): void {
   const runsDir = path.join(process.cwd(), '.parallely', 'runs');
   if (!fs.existsSync(runsDir)) {
-    process.stdout.write(`\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('parallely run')}\n\n`);
+    process.stdout.write(
+      `\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('parallely run')}\n\n`,
+    );
     return;
   }
 
   const runs = fs.readdirSync(runsDir).sort().reverse();
   if (runs.length === 0) {
-    process.stdout.write(`\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('parallely run')}\n\n`);
+    process.stdout.write(
+      `\n  ${s.stone('◫')} No inscriptions found. Run: ${s.gold('parallely run')}\n\n`,
+    );
     return;
   }
 
@@ -652,7 +677,9 @@ function cmdStatus(): void {
   const resultsPath = path.join(runsDir, latestRun, 'results.json');
 
   if (!fs.existsSync(resultsPath)) {
-    process.stdout.write(`\n  ${s.stone('◫')} Latest run: ${s.text(latestRun)} ${s.dim('(no results)')}\n\n`);
+    process.stdout.write(
+      `\n  ${s.stone('◫')} Latest run: ${s.text(latestRun)} ${s.dim('(no results)')}\n\n`,
+    );
     return;
   }
 
@@ -672,12 +699,19 @@ function cmdStatus(): void {
 
   process.stdout.write(`\n  ${s.stone('Sections:')}\n`);
   for (const sec of snap.sections) {
-    const icon = sec.status === 'completed' ? s.jade('✦') :
-                 sec.status === 'failed' ? s.crimson('✗') :
-                 sec.status === 'running' ? s.gold('✧') : s.stone('◫');
+    const icon =
+      sec.status === 'completed'
+        ? s.jade('✦')
+        : sec.status === 'failed'
+          ? s.crimson('✗')
+          : sec.status === 'running'
+            ? s.gold('✧')
+            : s.stone('◫');
     const tokens = sec.tokenUsage.input + sec.tokenUsage.output;
     const tokenStr = tokens > 0 ? s.dim(`${tokens} tokens`) : '';
-    process.stdout.write(`    ${icon} ${s.gold(String(sec.index + 1).padStart(2))}  ${s.text(sec.title.padEnd(25))} ${s.stone(sec.status.padEnd(12))} ${tokenStr}\n`);
+    process.stdout.write(
+      `    ${icon} ${s.gold(String(sec.index + 1).padStart(2))}  ${s.text(sec.title.padEnd(25))} ${s.stone(sec.status.padEnd(12))} ${tokenStr}\n`,
+    );
   }
 
   if (runs.length > 1) {
@@ -730,15 +764,21 @@ function cmdSetup(opts: { harness?: string }): void {
   for (const r of results) {
     const icon = r.action === 'skipped' ? s.stone('◫') : s.jade('✦');
     const verb =
-      r.action === 'created' ? s.jade('quarried') :
-      r.action === 'updated' ? s.gold('reforged') :
-      s.dim('already inscribed');
-    process.stdout.write(`  ${icon} ${s.text(r.harness.padEnd(16))} ${s.stone('━')} ${verb} ${s.dim(r.target)}\n`);
+      r.action === 'created'
+        ? s.jade('quarried')
+        : r.action === 'updated'
+          ? s.gold('reforged')
+          : s.dim('already inscribed');
+    process.stdout.write(
+      `  ${icon} ${s.text(r.harness.padEnd(16))} ${s.stone('━')} ${verb} ${s.dim(r.target)}\n`,
+    );
   }
 
   const installed = results.filter((r) => r.action !== 'skipped');
   if (installed.length > 0) {
-    process.stdout.write(`\n  ${s.jade('✦')} ${s.text('Skills inscribed. Agents will know the way.')}\n\n`);
+    process.stdout.write(
+      `\n  ${s.jade('✦')} ${s.text('Skills inscribed. Agents will know the way.')}\n\n`,
+    );
   } else {
     process.stdout.write(`\n  ${s.stone('Skills already inscribed in all harnesses.')}\n\n`);
   }
@@ -778,7 +818,9 @@ async function cmdPlan(
     skillBody = readSkillContent();
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`\n  ${s.crimson('✗')} ${s.crimson(`Could not load planning skill: ${message}`)}\n\n`);
+    process.stderr.write(
+      `\n  ${s.crimson('✗')} ${s.crimson(`Could not load planning skill: ${message}`)}\n\n`,
+    );
     process.exitCode = 1;
     return;
   }
@@ -818,7 +860,9 @@ async function cmdPlan(
     sections = parsePlanDir(planDirAbs);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`\n  ${s.crimson('✗')} ${s.crimson(`Plan parsing failed: ${message}`)}\n\n`);
+    process.stderr.write(
+      `\n  ${s.crimson('✗')} ${s.crimson(`Plan parsing failed: ${message}`)}\n\n`,
+    );
     process.exitCode = 1;
     return;
   }
@@ -836,12 +880,16 @@ async function cmdPlan(
     for (const error of validation.errors) {
       process.stderr.write(`    ${s.crimson('✗')} ${s.text(error)}\n`);
     }
-    process.stderr.write(`\n  ${s.crimson('Fix the generated plan, then run:')} ${s.gold(`parallely run -b ${backend}`)}\n\n`);
+    process.stderr.write(
+      `\n  ${s.crimson('Fix the generated plan, then run:')} ${s.gold(`parallely run -b ${backend}`)}\n\n`,
+    );
     process.exitCode = 1;
     return;
   }
 
-  process.stdout.write(`\n  ${s.jade('✦')} ${s.jade(`Plan ready with ${sections.length} section(s).`)}\n`);
+  process.stdout.write(
+    `\n  ${s.jade('✦')} ${s.jade(`Plan ready with ${sections.length} section(s).`)}\n`,
+  );
 
   if (!opts.run) {
     process.stdout.write(`  ${s.stone('Auto-run skipped (--no-run).')}\n\n`);
@@ -898,9 +946,9 @@ function cmdPrompt(section: string | undefined, opts: { planDir?: string }): voi
       if (i > 0) {
         process.stdout.write(
           '\n\n' +
-          `${s.rule(52)}\n` +
-          `${s.gold(`✦ Section ${i + 1}:`)} ${s.text(sections[i]!.title)} ${s.dim(`(${sections[i]!.filename})`)}\n` +
-          `${s.rule(52)}\n\n`,
+            `${s.rule(52)}\n` +
+            `${s.gold(`✦ Section ${i + 1}:`)} ${s.text(sections[i]!.title)} ${s.dim(`(${sections[i]!.filename})`)}\n` +
+            `${s.rule(52)}\n\n`,
         );
       }
       process.stdout.write(formatSectionPrompt(sections[i]!, implementSkill));
@@ -935,8 +983,7 @@ function formatSectionPrompt(section: PlanSection, implementSkill: string): stri
 }
 
 function cmdHelp(): void {
-  const cmd = (name: string, desc: string) =>
-    `  ${s.gold(name.padEnd(28))} ${s.stone(desc)}`;
+  const cmd = (name: string, desc: string) => `  ${s.gold(name.padEnd(28))} ${s.stone(desc)}`;
 
   process.stdout.write(`
   ${s.header()} ${s.dim('— parallel agent orchestration')}
@@ -964,9 +1011,9 @@ ${cmd('parallely help', 'Show this stone tablet')}
   ${s.bold('INSTALL')}
   ${s.gold('1.')} ${s.text('Install Bun')}     ${s.stone('━')} ${s.dim('curl -fsSL https://bun.sh/install | bash')}
   ${s.gold('2.')} ${s.text('Set PATH')}        ${s.stone('━')} ${s.dim('export PATH="$HOME/.bun/bin:$PATH"')}
-  ${s.gold('3.')} ${s.text('Install deps')}    ${s.stone('━')} ${s.dim('cd parallely && npm install --install-strategy=nested')}
+  ${s.gold('3.')} ${s.text('Install deps')}    ${s.stone('━')} ${s.dim('cd parallely && bun install')}
   ${s.gold('4.')} ${s.text('Build parallely')}      ${s.stone('━')} ${s.dim('bun run build')}
-  ${s.gold('5.')} ${s.text('Install global')}  ${s.stone('━')} ${s.dim('npm install -g /abs/path/to/parallely')}
+  ${s.gold('5.')} ${s.text('Install global')}  ${s.stone('━')} ${s.dim('bun install -g /abs/path/to/parallely')}
   ${s.gold('6.')} ${s.text('Verify')}          ${s.stone('━')} ${s.dim('parallely --help')}
 
 `);
@@ -979,18 +1026,26 @@ async function main(): Promise<void> {
 
   program
     .name('parallely')
-    .description('Parallel agent orchestration — execute plan sections concurrently via AI coding agents')
+    .description(
+      'Parallel agent orchestration — execute plan sections concurrently via AI coding agents',
+    )
     .version('0.1.0');
 
   program
     .command('run')
     .description('Execute the plan')
-    .option('-b, --backend <name>', 'Agent backend: codex, claude-code, opencode (default: configured backend)')
+    .option(
+      '-b, --backend <name>',
+      'Agent backend: codex, claude-code, opencode (default: configured backend)',
+    )
     .option('-m, --model <name>', 'Model override for the backend')
     .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .option('--no-cleanup', 'Keep the shared integration worktree after run finishes')
     .option('--timeout <ms>', 'Overall timeout per agent in ms (0 disables; default: 0)')
-    .option('--inactivity-timeout <ms>', 'Inactivity timeout per agent in ms (0 disables; default: 0)')
+    .option(
+      '--inactivity-timeout <ms>',
+      'Inactivity timeout per agent in ms (0 disables; default: 0)',
+    )
     .action(cmdRun);
 
   program
@@ -1001,14 +1056,23 @@ async function main(): Promise<void> {
   program
     .command('plan [prompt...]')
     .description('Generate a plan from a prompt via the configured backend, then run it')
-    .option('-b, --backend <name>', 'Planning backend: codex, claude-code, opencode (default: configured backend)')
+    .option(
+      '-b, --backend <name>',
+      'Planning backend: codex, claude-code, opencode (default: configured backend)',
+    )
     .option('-m, --model <name>', 'Model override for planning and run')
     .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .option('--plan-timeout <ms>', 'Timeout for plan generation in ms (0 disables; default: 0)')
     .option('--no-run', 'Generate and validate the plan only (skip automatic parallely run)')
     .option('--no-cleanup', 'Keep the shared integration worktree after run finishes')
-    .option('--timeout <ms>', 'Overall timeout per agent in ms for parallely run (0 disables; default: 0)')
-    .option('--inactivity-timeout <ms>', 'Inactivity timeout per agent in ms for parallely run (0 disables; default: 0)')
+    .option(
+      '--timeout <ms>',
+      'Overall timeout per agent in ms for parallely run (0 disables; default: 0)',
+    )
+    .option(
+      '--inactivity-timeout <ms>',
+      'Inactivity timeout per agent in ms for parallely run (0 disables; default: 0)',
+    )
     .action(cmdPlan);
 
   program
@@ -1017,10 +1081,7 @@ async function main(): Promise<void> {
     .option('--plan-dir <path>', 'Path to plan directory (default: .parallely/plan)')
     .action(cmdValidate);
 
-  program
-    .command('status')
-    .description('Show last run results')
-    .action(cmdStatus);
+  program.command('status').description('Show last run results').action(cmdStatus);
 
   program
     .command('prompt [section]')
@@ -1031,13 +1092,14 @@ async function main(): Promise<void> {
   program
     .command('setup')
     .description('Install the Parallely skill into agent harnesses')
-    .option('--harness <name>', 'Specific harness: claude-code, cursor, codex, opencode, all', 'all')
+    .option(
+      '--harness <name>',
+      'Specific harness: claude-code, cursor, codex, opencode, all',
+      'all',
+    )
     .action(cmdSetup);
 
-  program
-    .command('help')
-    .description('Show help message with examples')
-    .action(cmdHelp);
+  program.command('help').description('Show help message with examples').action(cmdHelp);
 
   // Default to help when no command is given
   if (process.argv.length <= 2) {

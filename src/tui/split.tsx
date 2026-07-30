@@ -3,7 +3,7 @@
 import type { LayoutNode, PaneState, RunSnapshot } from '../types.js';
 import type { SectionOutputStream } from './output-stream.js';
 import { PaneComponent } from './pane.js';
-import { resolveLayout, type Rect } from './layout.js';
+import type { Rect } from './layout.js';
 
 interface SplitScreenProps {
   snapshot: RunSnapshot;
@@ -38,9 +38,8 @@ function LayoutContainer({
     const pane = panes.get(node.paneId);
     if (!pane) return <box />;
 
-    const stream = pane.content.type === 'agent'
-      ? outputStreams.get(pane.content.sectionId)
-      : undefined;
+    const stream =
+      pane.content.type === 'agent' ? outputStreams.get(pane.content.sectionId) : undefined;
 
     return (
       <PaneComponent

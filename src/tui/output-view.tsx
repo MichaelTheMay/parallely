@@ -38,11 +38,7 @@ export function OutputView({
       {visibleLines.map((line) => {
         const age = now - line.timestamp;
         const isRecent = age < HIGHLIGHT_THRESHOLD_MS;
-        const color = line.source === 'stderr'
-          ? STATUS.error
-          : isRecent
-            ? GLOW.gold
-            : undefined;
+        const color = line.source === 'stderr' ? STATUS.error : isRecent ? GLOW.gold : undefined;
         return (
           <box key={line.id}>
             <text fg={color}>{line.text}</text>

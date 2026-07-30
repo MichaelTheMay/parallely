@@ -14,10 +14,7 @@ export interface Rect {
  * The tree is recursively split, with each node's ratio determining
  * how space is divided between its two children.
  */
-export function resolveLayout(
-  node: LayoutNode,
-  rect: Rect,
-): Map<string, Rect> {
+export function resolveLayout(node: LayoutNode, rect: Rect): Map<string, Rect> {
   const result = new Map<string, Rect>();
 
   if (node.type === 'leaf') {
@@ -31,7 +28,12 @@ export function resolveLayout(
     const secondWidth = rect.width - firstWidth;
 
     const firstRect: Rect = { x: rect.x, y: rect.y, width: firstWidth, height: rect.height };
-    const secondRect: Rect = { x: rect.x + firstWidth, y: rect.y, width: secondWidth, height: rect.height };
+    const secondRect: Rect = {
+      x: rect.x + firstWidth,
+      y: rect.y,
+      width: secondWidth,
+      height: rect.height,
+    };
 
     for (const [id, r] of resolveLayout(node.first, firstRect)) {
       result.set(id, r);
@@ -45,7 +47,12 @@ export function resolveLayout(
     const secondHeight = rect.height - firstHeight;
 
     const firstRect: Rect = { x: rect.x, y: rect.y, width: rect.width, height: firstHeight };
-    const secondRect: Rect = { x: rect.x, y: rect.y + firstHeight, width: rect.width, height: secondHeight };
+    const secondRect: Rect = {
+      x: rect.x,
+      y: rect.y + firstHeight,
+      width: rect.width,
+      height: secondHeight,
+    };
 
     for (const [id, r] of resolveLayout(node.first, firstRect)) {
       result.set(id, r);

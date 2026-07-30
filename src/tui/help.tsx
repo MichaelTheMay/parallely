@@ -8,10 +8,18 @@ interface HelpOverlayProps {
   termHeight: number;
 }
 
-function HelpSection({ title, bindings }: { title: string; bindings: [string, string][] }): JSX.Element {
+function HelpSection({
+  title,
+  bindings,
+}: {
+  title: string;
+  bindings: [string, string][];
+}): JSX.Element {
   return (
     <box flexDirection="column" marginBottom={1}>
-      <text fg={GLOW.gold}><strong>{title}</strong></text>
+      <text fg={GLOW.gold}>
+        <strong>{title}</strong>
+      </text>
       {bindings.map(([key, desc]) => (
         <box key={key} gap={1}>
           <text fg={GLOW.taupe}>{`  ${key.padEnd(14)}`}</text>
@@ -41,7 +49,9 @@ export function HelpOverlay({ termWidth, termHeight }: HelpOverlayProps): JSX.El
     >
       <box backgroundColor={BG.stone}>
         <text>
-          <strong><span fg={GLOW.gold}>{' '}ᚲ PARALLELY KEYBINDINGS</span></strong>
+          <strong>
+            <span fg={GLOW.gold}> ᚲ PARALLELY KEYBINDINGS</span>
+          </strong>
           {' '.repeat(Math.max(0, termWidth - 26))}
         </text>
       </box>

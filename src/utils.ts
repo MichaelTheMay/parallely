@@ -106,7 +106,9 @@ export function runCommand(
     child.on('close', (code) => {
       const exitCode = code ?? 1;
       if (exitCode !== 0 && !opts?.allowFailure) {
-        reject(new Error(`${command} ${args.join(' ')} failed (exit ${exitCode}): ${stderr.trim()}`));
+        reject(
+          new Error(`${command} ${args.join(' ')} failed (exit ${exitCode}): ${stderr.trim()}`),
+        );
       } else {
         resolve({ code: exitCode, stdout, stderr });
       }
@@ -124,10 +126,7 @@ export function slugify(filename: string): string {
 }
 
 export function generateRunId(): string {
-  const date = new Date()
-    .toISOString()
-    .slice(0, 10)
-    .replace(/-/g, '');
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const rand = Math.random().toString(36).slice(2, 10);
   return `${date}-${rand}`;
 }

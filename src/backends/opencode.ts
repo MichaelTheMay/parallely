@@ -1,4 +1,4 @@
-import type { BackendDriver, ParsedBackendEvent, TokenUsage } from '../types.js';
+import type { BackendDriver, ParsedBackendEvent } from '../types.js';
 import { runCommand } from '../utils.js';
 
 function toDisplayLines(prefix: string, text: string): string[] {
@@ -63,9 +63,10 @@ export function createOpenCodeDriver(): BackendDriver {
       ) {
         const part = parsed.part as Record<string, unknown>;
         const tokens = part.tokens as Record<string, unknown>;
-        const cache = (tokens.cache && typeof tokens.cache === 'object')
-          ? (tokens.cache as Record<string, unknown>)
-          : undefined;
+        const cache =
+          tokens.cache && typeof tokens.cache === 'object'
+            ? (tokens.cache as Record<string, unknown>)
+            : undefined;
         result.tokenIncrement = {
           input: typeof tokens.input === 'number' ? tokens.input : 0,
           cachedInput: cache && typeof cache.read === 'number' ? cache.read : 0,

@@ -1,6 +1,6 @@
 /* ── Ore theme — quiet stone, occasional gold, cyan accents ── */
 
-import type { Phase, SectionStatus } from '../types.js';
+import type { SectionStatus } from '../types.js';
 
 /* ── Backgrounds ── */
 
@@ -100,9 +100,9 @@ export const BACKEND_LABEL: Record<string, string> = {
 
 export const CONTEXT_LIMITS: Record<string, number> = {
   // Codex (OpenAI) — default model is o4-mini
-  'codex': 200_000,
+  codex: 200_000,
   'o4-mini': 200_000,
-  'o3': 200_000,
+  o3: 200_000,
   'o3-pro': 200_000,
   'gpt-4.1': 1_047_576,
   'gpt-4.1-mini': 1_047_576,
@@ -113,7 +113,7 @@ export const CONTEXT_LIMITS: Record<string, number> = {
   'claude-sonnet-4-6': 200_000,
   'claude-haiku-4-5-20251001': 200_000,
   // OpenCode — typically wraps various models
-  'opencode': 200_000,
+  opencode: 200_000,
 };
 
 /** Look up context window size for a backend/model combo */

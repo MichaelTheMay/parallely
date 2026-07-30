@@ -11,7 +11,16 @@ import { DetailScreen } from './detail.js';
 import { SplitScreen } from './split.js';
 import { StatusBar } from './status-bar.js';
 import { HelpOverlay } from './help.js';
-import { ChatInputBar, INITIAL_CHAT_STATE, openChat, closeChat, chatSending, chatSent, chatError, handleChatKey } from './chat-input.js';
+import {
+  ChatInputBar,
+  INITIAL_CHAT_STATE,
+  openChat,
+  closeChat,
+  chatSending,
+  chatSent,
+  chatError,
+  handleChatKey,
+} from './chat-input.js';
 import type { ChatInputState } from './chat-input.js';
 import { BG } from './theme.js';
 
@@ -301,9 +310,10 @@ export function ParallelyTui({ orchestrator }: ParallelyTuiProps): JSX.Element {
         );
         break;
       }
-      const stream = focusedPane.content.type === 'agent'
-        ? outputStreams.get(focusedPane.content.sectionId)
-        : undefined;
+      const stream =
+        focusedPane.content.type === 'agent'
+          ? outputStreams.get(focusedPane.content.sectionId)
+          : undefined;
       content = (
         <DetailScreen
           snapshot={snapshot}

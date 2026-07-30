@@ -1,4 +1,4 @@
-import type { BackendDriver, ParsedBackendEvent, TokenUsage } from '../types.js';
+import type { BackendDriver, ParsedBackendEvent } from '../types.js';
 import { runCommand } from '../utils.js';
 
 function toDisplayLines(prefix: string, text: string): string[] {
@@ -27,7 +27,9 @@ export function createClaudeCodeDriver(): BackendDriver {
     async checkVersion(): Promise<void> {
       const result = await runCommand('claude', ['--version'], { allowFailure: true });
       if (result.code !== 0) {
-        throw new Error('Claude Code CLI not found. Install: npm install -g @anthropic-ai/claude-code');
+        throw new Error(
+          'Claude Code CLI not found. Install: npm install -g @anthropic-ai/claude-code',
+        );
       }
     },
 
@@ -65,7 +67,11 @@ export function createClaudeCodeDriver(): BackendDriver {
         };
       }
 
-      if (parsed.type === 'assistant' && typeof parsed.message === 'object' && parsed.message !== null) {
+      if (
+        parsed.type === 'assistant' &&
+        typeof parsed.message === 'object' &&
+        parsed.message !== null
+      ) {
         const msg = parsed.message as Record<string, unknown>;
         if (Array.isArray(msg.content)) {
           const lines: string[] = [];
@@ -95,11 +101,7 @@ export function createClaudeCodeDriver(): BackendDriver {
         }
       }
 
-      if (
-        parsed.type === 'error' &&
-        typeof parsed.message === 'string' &&
-        !result.displayLines
-      ) {
+      if (parsed.type === 'error' && typeof parsed.message === 'string' && !result.displayLines) {
         result.displayLines = [`Error: ${parsed.message}`];
       }
 

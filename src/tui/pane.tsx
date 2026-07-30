@@ -58,15 +58,20 @@ export function PaneComponent({
 
   const borderColor = focused ? GLOW.goldDim : BG.stone;
   const statusColor = section
-    ? section.chatState === 'sending' ? GLOW.gold : STATUS_COLORS[section.status]
+    ? section.chatState === 'sending'
+      ? GLOW.gold
+      : STATUS_COLORS[section.status]
     : STATUS.muted;
   const statusLabel = section
-    ? section.chatState === 'sending' ? 'chat' : STATUS_LABELS[section.status]
+    ? section.chatState === 'sending'
+      ? 'chat'
+      : STATUS_LABELS[section.status]
     : '';
   const statusIcon = section ? STATUS_ICONS[section.status] : '';
-  const spinner = section && (section.status === 'running' || section.chatState === 'sending')
-    ? SPINNER_FRAMES[tick % SPINNER_FRAMES.length]
-    : '';
+  const spinner =
+    section && (section.status === 'running' || section.chatState === 'sending')
+      ? SPINNER_FRAMES[tick % SPINNER_FRAMES.length]
+      : '';
 
   const totalTokens = section ? section.tokenUsage.input + section.tokenUsage.output : 0;
   const tokenStr = totalTokens > 0 ? formatTokens(totalTokens) : '';
@@ -92,10 +97,13 @@ export function PaneComponent({
     >
       <box backgroundColor={BG.stone}>
         <text>
-          {focused
-            ? <strong><span fg={GLOW.gold}> {titleWithIcon}</span></strong>
-            : <span fg={STATUS.text}> {titleWithIcon}</span>
-          }
+          {focused ? (
+            <strong>
+              <span fg={GLOW.gold}> {titleWithIcon}</span>
+            </strong>
+          ) : (
+            <span fg={STATUS.text}> {titleWithIcon}</span>
+          )}
           {' '.repeat(gap)}
           <span fg={statusColor}>{rightStr} </span>
         </text>

@@ -33,7 +33,9 @@ export function StatusBar({ mode, snapshot, termWidth }: StatusBarProps): JSX.El
   return (
     <box width={termWidth} backgroundColor={BG.stone}>
       <text>
-        <strong><span fg={GLOW.gold}> ᚲ {modeTag} </span></strong>
+        <strong>
+          <span fg={GLOW.gold}> ᚲ {modeTag} </span>
+        </strong>
         <span fg={STATUS.muted}>{hints}</span>
         {' '.repeat(gap)}
         <span fg={STATUS.muted}>{tokenStr} tok </span>

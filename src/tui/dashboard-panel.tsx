@@ -29,7 +29,10 @@ function renderSparkline(points: TokenPoint[], width: number): string {
     .map((value) => {
       const idx = Math.max(
         0,
-        Math.min(SPARK_BLOCKS.length - 1, Math.floor(((value - min) / (max - min)) * SPARK_BLOCKS.length)),
+        Math.min(
+          SPARK_BLOCKS.length - 1,
+          Math.floor(((value - min) / (max - min)) * SPARK_BLOCKS.length),
+        ),
       );
       return SPARK_BLOCKS[idx]!;
     })
@@ -81,17 +84,17 @@ export function DashboardPanel({ snapshot, termWidth }: DashboardPanelProps): JS
       <text>
         <span fg={GLOW.gold}> total </span>
         <span fg={STATUS.text}>{formatTokens(totalTokens)} tokens</span>
-        <span fg={STATUS.muted}>  | in {formatTokens(snapshot.tokenUsage.input)}</span>
+        <span fg={STATUS.muted}> | in {formatTokens(snapshot.tokenUsage.input)}</span>
         <span fg={STATUS.muted}> cached {formatTokens(snapshot.tokenUsage.cachedInput)}</span>
         <span fg={STATUS.muted}> out {formatTokens(snapshot.tokenUsage.output)}</span>
       </text>
       <text>
         <span fg={STATUS.muted}> queue </span>
         <span fg={STATUS.text}>{snapshot.sections.length} sections</span>
-        <span fg={GLOW.gold}>  active {active}</span>
-        <span fg={STATUS.success}>  done {completed}</span>
-        <span fg={failed > 0 ? STATUS.error : STATUS.muted}>  fail {failed}</span>
-        <span fg={STATUS.muted}>  rate {Math.max(0, rate).toFixed(1)} tok/s</span>
+        <span fg={GLOW.gold}> active {active}</span>
+        <span fg={STATUS.success}> done {completed}</span>
+        <span fg={failed > 0 ? STATUS.error : STATUS.muted}> fail {failed}</span>
+        <span fg={STATUS.muted}> rate {Math.max(0, rate).toFixed(1)} tok/s</span>
       </text>
       <text>
         <span fg={STATUS.muted}> trend </span>

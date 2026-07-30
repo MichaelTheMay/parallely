@@ -1,10 +1,13 @@
 {
-  "name": "parallely",
+  "name": "@michaelthemay/parallely",
   "version": "0.1.0",
   "description": "Parallel agent orchestration CLI — execute plan sections concurrently via AI coding agents",
   "type": "module",
   "license": "MIT",
   "author": "Michael May",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MichaelTheMay/parallely.git"
@@ -26,10 +29,27 @@
   "bin": {
     "parallely": "bin/parallely.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "skill",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "preferGlobal": true,
   "scripts": {
     "build": "tsup src/index.tsx --format esm --target esnext --out-dir dist --clean",
     "dev": "bun run src/index.tsx",
-    "type-check": "bun run tsc --noEmit"
+    "type-check": "bun run tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "prepublishOnly": "bun run build && bun run type-check && bun run lint && bun test"
   },
   "dependencies": {
     "@openai/codex-sdk": "^0.115.0",
@@ -39,9 +59,14 @@
     "react": "^19.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.9.1",
     "@types/react": "^19.0.0",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "prettier": "^3.9.6",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0"
   }
 }

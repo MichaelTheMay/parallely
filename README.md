@@ -1,8 +1,31 @@
 # Parallely
 
-Parallel agent orchestration CLI — split large tasks into sections that execute concurrently via AI coding agents, each working in a shared git worktree.
+[![CI](https://github.com/MichaelTheMay/parallely/actions/workflows/ci.yml/badge.svg)](https://github.com/MichaelTheMay/parallely/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@michaelthemay/parallely.svg)](https://www.npmjs.com/package/@michaelthemay/parallely)
+[![License: MIT](https://img.shields.io/badge/License-MIT-c8a84e.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](tsconfig.json)
+[![Bun](https://img.shields.io/badge/Bun-1.0%2B-fbf0df.svg)](https://bun.sh)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+> Parallel agent orchestration CLI — split large tasks into sections that execute concurrently via AI coding agents, each working in a shared git worktree.
 
 Parallely works with **[Codex](https://github.com/openai/codex)**, **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)**, and **[OpenCode](https://github.com/opencode-ai/opencode)** as backends.
+
+<!--
+  Demo: drop the recorded terminal cast here once available, e.g.
+  ![Parallely running four sections](docs/assets/demo.svg)
+  A styled preview also lives on the landing page in docs/index.html.
+-->
+
+## Why Parallely
+
+Coding agents are fast, but you still drive them one conversation at a time — a big feature
+becomes a queue of sequential prompts. Parallely treats a feature the way a tech lead treats
+a sprint: break it into independent sections, hand each to its own agent, and let them work
+at the same time. You define the seams (which files each section owns), Parallely enforces
+them (overlap detection), runs the agents concurrently in a shared git worktree, and
+consolidates everything onto one integration branch — all under a terminal UI that shows
+exactly what each agent is doing and spending.
 
 ## How It Works
 
@@ -27,21 +50,30 @@ Parallely works with **[Codex](https://github.com/openai/codex)**, **[Claude Cod
 
 ### Prerequisites
 
-- **[Bun](https://bun.sh)** v1.0+ (runtime & bundler)
-- **Node.js** 20+ (for npm global install)
+- **[Bun](https://bun.sh)** v1.0+ (runtime, bundler & test runner) — Parallely's TUI is
+  built on OpenTUI, which requires the Bun runtime
 - At least one agent CLI installed:
   - `codex` — `npm install -g @openai/codex`
   - `claude` — `npm install -g @anthropic-ai/claude-code`
   - `opencode` — See [opencode-ai/opencode](https://github.com/opencode-ai/opencode)
+
+### Install from npm
+
+```bash
+bun install -g @michaelthemay/parallely
+parallely --help
+```
+
+> Install with Bun (`bun install -g`), not npm — Parallely runs on the Bun runtime.
 
 ### Install from source
 
 ```bash
 git clone https://github.com/MichaelTheMay/parallely.git
 cd parallely
-npm install --install-strategy=nested
+bun install
 bun run build
-npm install -g .
+bun install -g .
 ```
 
 Verify:
@@ -50,7 +82,9 @@ Verify:
 parallely --help
 ```
 
-> **Why `--install-strategy=nested`?** Parallely uses React 19 with OpenTUI. Nested installs ensure both packages resolve the same React runtime, preventing the "multiple React runtimes" error.
+> Parallely uses React 19 with OpenTUI, which requires a **single** React runtime.
+> `bun install` dedupes to one copy automatically. If you install with npm instead, use
+> `npm install --install-strategy=nested` to avoid the "multiple React runtimes" error.
 
 ## Quick Start
 
@@ -216,20 +250,53 @@ parallely/
 │   │   └── opencode.ts      # OpenCode driver
 │   ├── git/
 │   │   └── worktree.ts      # Git worktree management
-│   └── tui/                 # Interactive terminal UI (React + OpenTUI)
-│       ├── tui-root.tsx     # Root component & keyboard handling
-│       ├── tui-state.ts     # State management (useReducer)
-│       ├── overview.tsx     # Overview screen
-│       ├── detail.tsx       # Detail view
-│       ├── split.tsx        # Split pane layout
-│       └── ...              # Additional TUI components
+│   ├── tui/                 # Interactive terminal UI (React + OpenTUI)
+│   │   ├── tui-root.tsx     # Root component & keyboard handling
+│   │   ├── tui-state.ts     # State management (useReducer)
+│   │   ├── overview.tsx     # Overview screen
+│   │   ├── detail.tsx       # Detail view
+│   │   ├── split.tsx        # Split pane layout
+│   │   └── ...              # Additional TUI components
+│   └── jsx.d.ts             # Global JSX namespace shim for OpenTUI
+├── test/                    # Unit tests (bun test)
+├── examples/demo/           # Ready-to-run four-section plan
+├── docs/                    # ARCHITECTURE.md + landing page
 ├── skill/
 │   ├── SKILL.md             # Planning skill (agent instructions)
 │   └── IMPLEMENT.md         # Implementation skill
+├── .github/workflows/       # CI + publish
+├── eslint.config.js
 ├── package.json
 └── tsconfig.json
 ```
 
+## Roadmap
+
+- [ ] Dependency-aware scheduling (run sections in waves based on declared ordering)
+- [ ] Richer merge-conflict resolution flow in the TUI
+- [ ] Session replay from a persisted run
+- [ ] Published npm release + `npx parallely` usage
+- [ ] Additional backends
+
+Have an idea? Open an issue or a discussion.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — how a run flows through the orchestrator, backends, and worktrees
+- [Contributing](CONTRIBUTING.md) — local setup, scripts, and conventions
+- [Changelog](CHANGELOG.md)
+- [Example plan](examples/demo/) — a ready-to-run four-section demo
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup and
+the checks CI expects. In short:
+
+```bash
+bun install
+bun run type-check && bun run lint && bun test && bun run build
+```
+
 ## License
 
-MIT
+[MIT](LICENSE) © Michael May

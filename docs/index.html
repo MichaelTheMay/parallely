@@ -273,26 +273,18 @@
           <a class="btn ghost" href="#install">Install</a>
         </div>
 
-        <!--
-          To drop in the real recording, replace the .terminal block below with:
-          <img src="assets/demo.svg" alt="Parallely TUI running four sections" style="width:100%;border-radius:12px;border:1px solid var(--border)" />
-        -->
-        <div class="terminal" role="img" aria-label="Parallely terminal UI overview">
+        <div class="terminal">
           <div class="term-bar">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             <span class="term-title mono">parallely · run</span>
           </div>
-<pre class="term"><span class="g">ᚲ parallely</span>  <span class="m">·</span>  Codex · o4-mini  <span class="m">·</span>  <span class="m">2m 34s</span>
-<span class="m">parse → setup → forge → merge → done</span>
-<span class="m">──────────────────────────────────────────────</span>
- <span class="c">›</span> <span class="ok">✓</span>  1  Auth system        <span class="ok">done</span>   12.4K
-   <span class="g">●</span>  2  CRUD endpoints     <span class="g">run</span>     8.2K
-   <span class="g">●</span>  3  Database layer     <span class="g">run</span>     6.1K
-   <span class="m">○</span>  4  Tests              <span class="m">wait</span>       –
-<span class="m">──────────────────────────────────────────────</span>
-<span class="m">j/k</span> nav  <span class="m">enter</span> detail  <span class="m">s</span> split  <span class="m">i</span> message  <span class="m">q</span> quit</pre>
+          <img
+            src="assets/demo.gif"
+            alt="Parallely running three sections concurrently via the Claude Code backend: the overview with live per-agent token usage, a live agent inspector, and the final run summary"
+            style="display: block; width: 100%; height: auto"
+          />
         </div>
-        <p class="caption">The overview screen — live status, per-agent token usage, and phase progress.</p>
+        <p class="caption">A real run — three sections built concurrently by Claude Code agents, then consolidated onto one integration branch.</p>
       </div>
     </header>
 

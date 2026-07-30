@@ -11,11 +11,7 @@
 
 Parallely works with **[Codex](https://github.com/openai/codex)**, **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)**, and **[OpenCode](https://github.com/opencode-ai/opencode)** as backends.
 
-<!--
-  Demo: drop the recorded terminal cast here once available, e.g.
-  ![Parallely running four sections](docs/assets/demo.svg)
-  A styled preview also lives on the landing page in docs/index.html.
--->
+![Parallely running three sections concurrently via the Claude Code backend — overview, a live agent inspector, and the final run summary](docs/assets/demo.gif)
 
 ## Why Parallely
 

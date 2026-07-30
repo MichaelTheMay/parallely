@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ESLint (flat config), Prettier, and EditorConfig for consistent style.
 - `CONTRIBUTING.md`, `SECURITY.md`, and `docs/ARCHITECTURE.md`.
 - `examples/demo/` — a ready-to-run four-section plan.
+- Animated demo recording (`docs/assets/demo.gif`) embedded in the README and the
+  landing page, captured from a real Claude Code run.
 
 ### Fixed
 

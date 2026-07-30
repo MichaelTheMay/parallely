@@ -52,7 +52,7 @@
     "prepublishOnly": "bun run build && bun run type-check && bun run lint && bun test"
   },
   "dependencies": {
-    "@openai/codex-sdk": "^0.115.0",
+    "@openai/codex-sdk": "^0.146.0",
     "@opentui/core": "^0.1.61",
     "@opentui/react": "^0.1.61",
     "commander": "^12.1.0",

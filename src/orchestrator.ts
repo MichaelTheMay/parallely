@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -642,7 +643,7 @@ export class ParallelyOrchestrator {
 
       const outputStream = this.outputStreams.get(sectionId);
 
-      child.stdout?.on('data', (chunk: Buffer) => {
+      child.stdout?.on('data', (chunk: Uint8Array) => {
         resetInactivity();
         buffered += chunk.toString();
 
@@ -689,14 +690,14 @@ export class ParallelyOrchestrator {
         }
       });
 
-      child.stderr?.on('data', (chunk: Buffer) => {
+      child.stderr?.on('data', (chunk: Uint8Array) => {
         resetInactivity();
         const text = chunk.toString();
         stderr += text;
         outputStream?.pushLines(text, 'stderr');
       });
 
-      child.on('close', (code) => {
+      child.on('close', (code: any) => {
         if (overallTimer) clearTimeout(overallTimer);
         if (inactivityTimer) clearTimeout(inactivityTimer);
         resolve({
@@ -711,9 +712,13 @@ export class ParallelyOrchestrator {
         });
       });
 
-      child.on('error', (err) => {
+      child.on('error', (err: { message: any; }) => {
         if (overallTimer) clearTimeout(overallTimer);
-        if (inactivityTimer) clearTimeout(inactivityTimer);
+        if (inactivityTimer) {
+          clearTimeout(inactivityTimer);
+          inactivityTimer = null;
+        }
+        this.addLog(`Agent spawn error for "${sectionId}": ${err.message}`);
         resolve({
           exitCode: 1,
           usage,
@@ -737,7 +742,12 @@ export class ParallelyOrchestrator {
   private async phaseConsolidateWorktrees(): Promise<void> {
     if (!this.worktreeManager) return;
     this.addLog('Consolidating shared integration worktree...');
-    await this.worktreeManager.cleanupSectionWorktrees();
+    try {
+      await this.worktreeManager.cleanupSectionWorktrees();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.addLog(`Warning: worktree consolidation failed: ${message}`);
+    }
   }
 
   /* ── Phase: DONE ── */
@@ -845,8 +855,10 @@ export class ParallelyOrchestrator {
       const resultsPath = path.join(runsDir, 'results.json');
       fs.writeFileSync(resultsPath, JSON.stringify(this.cloneSnapshot(), null, 2));
       this.addLog(`Results saved to ${resultsPath}`);
-    } catch {
-      // Non-fatal
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      // Non-fatal but log so users know results weren't persisted
+      process.stderr.write(`[parallely] Warning: could not persist results: ${message}\n`);
     }
   }
 }

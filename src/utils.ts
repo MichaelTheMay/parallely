@@ -88,10 +88,10 @@ export function runCommand(
     let stdout = '';
     let stderr = '';
 
-    child.stdout.on('data', (chunk: Buffer) => {
+    child.stdout?.on('data', (chunk: Uint8Array) => {
       stdout += chunk.toString();
     });
-    child.stderr.on('data', (chunk: Buffer) => {
+    child.stderr?.on('data', (chunk: Uint8Array) => {
       stderr += chunk.toString();
     });
 

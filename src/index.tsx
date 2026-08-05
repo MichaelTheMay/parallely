@@ -110,8 +110,10 @@ function readParallelyConfig(cwd: string): ParallelyConfig {
     if (typeof parsed === 'object' && parsed !== null) {
       return parsed as ParallelyConfig;
     }
-  } catch {
-    // Ignore invalid config and fall back.
+    process.stderr.write(`[parallely] Warning: config at ${configPath} is not an object, ignoring\n`);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`[parallely] Warning: could not read config at ${configPath}: ${message}\n`);
   }
   return {};
 }
@@ -127,7 +129,15 @@ function latestRunBackend(cwd: string): Backend | undefined {
   const runsDir = path.join(cwd, '.parallely', 'runs');
   if (!fs.existsSync(runsDir)) return undefined;
 
-  const runs = fs.readdirSync(runsDir).sort().reverse();
+  let runs: string[];
+  try {
+    runs = fs.readdirSync(runsDir).sort().reverse();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`[parallely] Warning: could not read runs directory: ${message}\n`);
+    return undefined;
+  }
+
   for (const runId of runs) {
     const resultsPath = path.join(runsDir, runId, 'results.json');
     if (!fs.existsSync(resultsPath)) continue;
@@ -136,8 +146,9 @@ function latestRunBackend(cwd: string): Backend | undefined {
       if (typeof parsed.backend === 'string') {
         return parseBackend(parsed.backend);
       }
-    } catch {
-      // Ignore malformed run metadata and continue searching.
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`[parallely] Warning: could not read run results at ${resultsPath}: ${message}\n`);
     }
   }
 

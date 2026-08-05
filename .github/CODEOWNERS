@@ -1,0 +1,4 @@
+# Every change to this repository requires review and approval from the owner.
+# Combined with branch protection on `main`, this ensures that only the
+# repository owner can merge code changes, while anyone may open a pull request.
+* @MichaelTheMay

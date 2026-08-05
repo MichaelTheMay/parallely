@@ -125,6 +125,7 @@ export class WorktreeManager {
    */
   async cleanupSectionWorktrees(): Promise<void> {
     const remaining: WorktreeSpec[] = [];
+    const errors: string[] = [];
 
     for (const wt of this.worktrees) {
       const slug = path.basename(wt.path);
@@ -132,33 +133,63 @@ export class WorktreeManager {
         remaining.push(wt);
         continue;
       }
-      await this.removeWorktree(wt.path);
+      try {
+        await this.removeWorktree(wt.path);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push(message);
+        remaining.push(wt); // keep track so prune can still attempt it
+      }
     }
 
     this.worktrees = remaining;
     await runCommand('git', ['-C', this.repoRoot, 'worktree', 'prune'], { allowFailure: true });
+
+    if (errors.length > 0) {
+      throw new Error(`Failed to remove ${errors.length} worktree(s): ${errors.join('; ')}`);
+    }
   }
 
   /**
    * Remove all worktrees and prune.
    */
   async cleanup(): Promise<void> {
+    const errors: string[] = [];
+
     for (const wt of this.worktrees) {
-      await this.removeWorktree(wt.path);
+      try {
+        await this.removeWorktree(wt.path);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push(message);
+      }
     }
     await runCommand('git', ['-C', this.repoRoot, 'worktree', 'prune'], { allowFailure: true });
     this.worktrees = [];
 
-    // Remove the worktree directory
     const dir = this.worktreeDir;
     if (fs.existsSync(dir)) {
-      fs.rmSync(dir, { recursive: true, force: true });
+      try {
+        fs.rmSync(dir, { recursive: true, force: true });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push(`rmSync ${dir}: ${message}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Cleanup encountered ${errors.length} error(s): ${errors.join('; ')}`);
     }
   }
 
   private async removeWorktree(wtPath: string): Promise<void> {
-    await runCommand('git', ['-C', this.repoRoot, 'worktree', 'remove', '--force', wtPath], {
-      allowFailure: true,
-    });
+    try {
+      await runCommand('git', ['-C', this.repoRoot, 'worktree', 'remove', '--force', wtPath], {
+        allowFailure: true,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`[parallely] Warning: failed to remove worktree at ${wtPath}: ${message}\n`);
+    }
   }
 }

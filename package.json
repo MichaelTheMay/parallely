@@ -60,13 +60,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.9.1",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.0.0",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "^3.9.6",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.65.0"
   }
 }

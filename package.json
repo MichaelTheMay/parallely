@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@openai/codex-sdk": "^0.115.0",
-    "@opentui/core": "^0.1.61",
+    "@opentui/core": "^0.4.5",
     "@opentui/react": "^0.1.61",
     "commander": "^12.1.0",
     "react": "^19.0.0"
